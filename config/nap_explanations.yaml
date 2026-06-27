@@ -1,0 +1,68 @@
+defaults:
+  generic:
+    market_role: General market reference used for outright, structure, and relative-value monitoring.
+    drivers: Crude direction, regional supply-demand, refinery operations, freight, inventory, macro risk appetite.
+    related_spreads: Time spreads, regional differentials, cracks, margins, and freight-adjusted arbitrage.
+    trading_use: Track latest level, momentum, seasonality, volatility, and cross-market dislocations.
+    notes: Confirm unit and contract-month convention before comparing with other markets.
+  Crude:
+    market_role: Global crude benchmark and anchor for product cracks and refinery margin analysis.
+    drivers: OPEC+ policy, inventories, refinery runs, geopolitical risk, USD, rates, and macro demand.
+    related_spreads: Brent-WTI, Dubai-Brent, M1-M2, M1-M3, gasoline crack, diesel crack.
+    trading_use: Benchmark outright risk, forward structure, beta for products, and refinery economics.
+    notes: Compare contract-month alignment before calculating cracks.
+  Gasoline:
+    market_role: Light-end product benchmark for driving season demand and refinery yield value.
+    drivers: US driving demand, blending economics, refinery outages, inventories, RVP shifts, freight.
+    related_spreads: RBOB-WTI, Singapore 92R crack, M1-M2, regional gasoline arbitrage.
+    trading_use: Monitor crack strength, seasonality, regional arb, and inventory stress.
+    notes: RBOB and HO futures are quoted in USD/gal and normalized to USD/bbl by multiplying by 42.
+  Jet/Heating Oil:
+    market_role: Distillate benchmark linking heating oil futures, jet fuel, and middle distillate cracks.
+    drivers: Winter demand, aviation demand, refinery yields, diesel substitution, inventories, freight.
+    related_spreads: HO-WTI, jet regrade, distillate cracks, M1-M2.
+    trading_use: Track middle-distillate strength, seasonality, and refinery margin contribution.
+    notes: Heating Oil futures are quoted in USD/gal and normalized to USD/bbl by multiplying by 42.
+  Diesel:
+    market_role: Middle distillate benchmark for industrial demand and refinery margin analysis.
+    drivers: Industrial demand, exports, refinery outages, gasoil stocks, sanctions, freight.
+    related_spreads: LSGO-Brent, diesel cracks, gasoil time spreads.
+    trading_use: Monitor distillate crack momentum, curve structure, and regional dislocations.
+    notes: Some gasoil contracts are USD/mt and should not be directly compared with USD/bbl prices without conversion assumptions.
+  Naphtha:
+    market_role: Petrochemical feedstock benchmark tied to steam crackers, gasoline blending, and LPG substitution.
+    drivers: Crude, petrochemical margins, cracker runs, gasoline blending demand, LPG-naphtha economics, Asian imports.
+    related_spreads: Naphtha-Brent, MOPJ spreads, LPG-naphtha, time spreads.
+    trading_use: Track petrochemical feedstock value, Asian structure, and cracker economics.
+    notes: Watch half-month and front-month naming conventions in Japan/Singapore series.
+  Propane:
+    market_role: LPG benchmark used for petrochemical feedstock switching and regional import economics.
+    drivers: US exports, Middle East supply, PDH demand, weather, shipping, propane-naphtha substitution.
+    related_spreads: CP-FEI, FEI-MB, LPG-naphtha, propane time spreads.
+    trading_use: Monitor LPG relative value, import margins, and feedstock switching signals.
+    notes: Contract naming may mix physical assessments and futures-style continuous months.
+  Fuel Oil:
+    market_role: Residual fuel benchmark for bunker demand, refinery residue value, and high-low sulphur spread.
+    drivers: Bunker demand, refinery runs, Russian flows, sulphur spreads, crude quality, freight.
+    related_spreads: Hi-5, HSFO crack, VLSFO crack, time spreads.
+    trading_use: Track bunker economics, residue cracks, and sulphur regulation premia.
+    notes: USD/mt fuel oil values are not directly comparable to USD/bbl crude without density assumptions.
+  Freight:
+    market_role: Route-level transport cost for crude and product arbitrage.
+    drivers: Vessel supply, tonne-mile demand, port delays, sanctions, seasonality, bunker fuel costs.
+    related_spreads: Freight-adjusted USGC-Asia, Middle East-Asia, Europe-US arbitrage.
+    trading_use: Adjust regional price spreads for delivered economics.
+    notes: Route units are treated as USD/bbl when Reuters field is Voyage Rate (BBL).
+  Cracks:
+    market_role: Product margin indicator versus crude benchmarks.
+    drivers: Product demand, crude moves, refinery outages, inventories, regional imbalances.
+    related_spreads: Gasoline cracks, gasoil cracks, fuel oil cracks, refinery margins.
+    trading_use: Monitor refinery yield value and product relative strength.
+    notes: Crack definitions vary by crude benchmark and region.
+  Margins:
+    market_role: Refinery margin benchmark for regional crude-product economics.
+    drivers: Product cracks, crude slate, operating rates, inventory, policy, freight.
+    related_spreads: Regional refinery margins, crude differentials, product cracks.
+    trading_use: Track refinery profitability and margin regime shifts.
+    notes: Treat published margin formulas as benchmark conventions, not plant-specific economics.
+series: {}

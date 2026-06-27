@@ -1,0 +1,11 @@
+﻿.venv/
+__pycache__/
+.pytest_cache/
+outputs/
+*.log
+*.pyc
+*.pyo
+*.pyd
+data/raw/*.xlsx
+data/processed/*.parquet
+data/processed/*.pkl

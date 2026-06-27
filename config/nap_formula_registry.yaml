@@ -1,0 +1,62 @@
+formulas:
+  - name: RBOB - WTI
+    description: NYMEX RBOB M1 normalized to USD/bbl minus WTI M1.
+    legs:
+      - weight: 1
+        selector:
+          product: RBOB
+          contract_month: M1
+      - weight: -1
+        selector:
+          product: WTI
+          contract_month: M1
+  - name: HO - WTI
+    description: NYMEX Heating Oil M1 normalized to USD/bbl minus WTI M1.
+    legs:
+      - weight: 1
+        selector:
+          product: Heating Oil
+          contract_month: M1
+      - weight: -1
+        selector:
+          product: WTI
+          contract_month: M1
+  - name: LSGO - Brent
+    description: ICE low sulphur gasoil M1 minus Brent M1. Units are native-normalized where available.
+    legs:
+      - weight: 1
+        selector:
+          product: LSGO
+          contract_month: M1
+      - weight: -1
+        selector:
+          product: Brent
+          contract_month: M1
+  - name: Singapore 92R crack
+    description: Reuters Singapore 92RON crack front month.
+    legs:
+      - weight: 1
+        selector:
+          product: Singapore 92R Crack
+          contract_month: M1
+  - name: Hi-5 = VLSFO - HSFO
+    description: Singapore low sulphur fuel oil minus high sulphur fuel oil.
+    legs:
+      - weight: 1
+        selector:
+          product: VLSFO
+          contract_month: M1
+      - weight: -1
+        selector:
+          product: HSFO
+          contract_month: M1
+  - name: Refinery margin vs crude
+    description: Front-month refining margin against Brent front month.
+    legs:
+      - weight: 1
+        selector:
+          product: Refining Margin
+      - weight: -1
+        selector:
+          product: Brent
+          contract_month: M1
