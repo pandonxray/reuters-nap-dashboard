@@ -49,6 +49,17 @@ MARKET_GROUPS = [
 ]
 
 
+def _make_unique(values: Iterable[object]) -> list[str]:
+    seen: dict[str, int] = {}
+    unique: list[str] = []
+    for raw in values:
+        value = str(raw or "").strip() or "Unnamed"
+        count = seen.get(value, 0) + 1
+        seen[value] = count
+        unique.append(value if count == 1 else f"{value} #{count}")
+    return unique
+
+
 def long_to_wide(df: pd.DataFrame, normalized: bool = True) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
@@ -63,17 +74,40 @@ def catalog_with_labels(df: pd.DataFrame) -> pd.DataFrame:
     if catalog.empty:
         return catalog
     catalog = catalog.copy()
-    catalog["label"] = catalog.apply(
-        lambda row: f"{row['display_name']} · {row['ric']}" if row.get("ric") else str(row["display_name"]),
-        axis=1,
-    )
+    labels = []
+    for _, row in catalog.iterrows():
+        parts = [
+            row.get("sector"),
+            row.get("product"),
+            row.get("region"),
+            row.get("contract_month"),
+        ]
+        context = " / ".join(str(part) for part in parts if pd.notna(part) and str(part).strip())
+        name = str(row.get("display_name") or row.get("series_id") or "").strip()
+        ric = str(row.get("ric") or "").strip()
+        label = name
+        if context:
+            label = f"{context} | {label}"
+        if ric:
+            label = f"{label} · {ric}"
+        labels.append(label)
+    catalog["label"] = _make_unique(labels)
     return catalog
 
 
 def display_lookup(catalog: pd.DataFrame) -> dict[str, str]:
     if catalog.empty:
         return {}
-    return dict(zip(catalog["series_id"], catalog["display_name"]))
+    names = []
+    for _, row in catalog.iterrows():
+        parts = [
+            row.get("display_name"),
+            row.get("contract_month"),
+            row.get("region"),
+            row.get("ric"),
+        ]
+        names.append(" · ".join(str(part) for part in parts if pd.notna(part) and str(part).strip()))
+    return dict(zip(catalog["series_id"], _make_unique(names)))
 
 
 def _latest_valid(series: pd.Series) -> tuple[pd.Timestamp | pd.NaT, float]:
