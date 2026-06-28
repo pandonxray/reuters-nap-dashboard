@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+import re
 import numpy as np
 import pandas as pd
 
@@ -60,6 +61,285 @@ def _make_unique(values: Iterable[object]) -> list[str]:
     return unique
 
 
+def _row_text(row: pd.Series) -> str:
+    parts = [
+        row.get("display_name"),
+        row.get("short_name"),
+        row.get("name_native"),
+        row.get("ric"),
+        row.get("product"),
+        row.get("region"),
+        row.get("sheet"),
+    ]
+    return " ".join(str(part) for part in parts if pd.notna(part)).lower()
+
+
+def _has_any(text: str, tokens: Iterable[str]) -> bool:
+    return any(token.lower() in text for token in tokens)
+
+
+def _refine_product(row: pd.Series) -> str:
+    sector = str(row.get("sector") or "").strip()
+    product = str(row.get("product") or "").strip()
+    text = _row_text(row)
+    ric = str(row.get("ric") or "").strip().upper()
+
+    if sector == "Crude":
+        if "murban" in text or ric.startswith("MRBN"):
+            return "Murban原油"
+        if re.search(r"\bsc\b", text) or ric.startswith("ISC"):
+            return "SC原油"
+        if "bdss" in text or "dubsw-brtsw" in text:
+            return "Dubai-Brent价差"
+        if "brent cfd" in text or "brt-" in text:
+            return "Brent CFD"
+        if "dfl" in text:
+            return "Brent DFL"
+        if any(token in text for token in ["cushing", "wts"]) or ric.startswith("WTC") or ric.startswith("WTS"):
+            return "WTI/Cushing体系"
+        if any(token in text for token in ["lls", "mars"]) or ric.startswith(("LLS", "MRS")):
+            return "美湾现货原油"
+        if product and product != "Crude":
+            return product
+        return "其他原油"
+
+    if sector == "Gasoline":
+        if "rbob" in text or ric.startswith("RB"):
+            return "RBOB汽油"
+        if "ebob" in text or "nwe" in text:
+            return "欧洲EBOB汽油"
+        if "97" in text:
+            return "新加坡97汽油"
+        if "95" in text:
+            return "新加坡95汽油"
+        if "92" in text or "mog92" in text or "gl92" in text:
+            return "新加坡92汽油"
+        return "其他汽油"
+
+    if sector == "Naphtha":
+        if "mopj" in text or "nacfrjpck" in text or "裂差" in text:
+            return "MOPJ裂解/价差"
+        if re.search(r"\bew\b", text) or "napjpew" in text:
+            return "东西石脑油价差"
+        if "dif" in text or "贴水" in text:
+            return "石脑油贴水"
+        if "japan" in text or "tyo" in text or "cfr" in text or "nacfrjp" in text:
+            return "日本CFR石脑油"
+        return "石脑油纸货"
+
+    if sector == "Jet/Heating Oil":
+        if "ho " in text or ric.startswith("HO"):
+            return "NYMEX取暖油"
+        if "usg" in text or "usgc" in text:
+            return "美国湾航煤"
+        if "sin" in text or "singapore" in text:
+            return "新加坡航煤"
+        if "nwe" in text or "europe" in text or "new" in text:
+            return "欧洲航煤"
+        return "其他航煤/取暖油"
+
+    if sector == "Diesel":
+        if "lgo" in text or ric.startswith("LGO"):
+            return "欧洲低硫柴油/LSGO"
+        if "10ppm" in text or "go10" in text:
+            return "新加坡10ppm柴油"
+        return "其他柴油"
+
+    if sector == "Fuel Oil":
+        if "vlsfo" in text or "低硫" in text:
+            return "低硫燃料油/VLSFO"
+        if "hsfo" in text or "fo380" in text or "高硫" in text or "hfo" in text:
+            return "高硫燃料油/HSFO"
+        return "其他燃料油"
+
+    if sector == "Cracks":
+        if "92ron" in text or "mog92sgck" in text:
+            return "新加坡92汽油裂解"
+        if "sin go" in text or "go10brtck" in text:
+            return "新加坡柴油裂解"
+        if "fo380" in text or "高硫" in text:
+            return "新加坡高硫裂解"
+        if "ebob" in text:
+            return "欧洲汽油裂解"
+        if "jetfcnwe" in text:
+            return "欧洲航煤裂解"
+        if "jetsg" in text or "singapore jet" in text:
+            return "新加坡航煤裂解"
+        if "rbob" in text or ric.startswith("RB"):
+            return "RBOB-WTI裂解"
+        if "ho" in text or ric.startswith("HO"):
+            return "HO-WTI裂解"
+        if "lgo" in text or ric.startswith("LGO"):
+            return "LSGO-Brent裂解"
+        return "其他裂解价差"
+
+    if sector == "Margins":
+        if "coking" in text or "cok" in ric:
+            return "Coking炼厂利润"
+        if "topping" in text or "top" in ric:
+            return "Topping炼厂利润"
+        if "cracking" in text or "crack" in text or "crk" in ric or "ref" in ric:
+            return "Cracking炼厂利润"
+        return "综合炼厂利润"
+
+    if sector == "Freight":
+        if ric.startswith("TC-"):
+            return "成品油轮运费"
+        if ric.startswith("TD-"):
+            return "原油轮运费"
+        return "运费路线"
+
+    if sector == "Propane/LPG":
+        if "fei" in text:
+            return "FEI丙烷"
+        if re.search(r"\bcp\b", text):
+            return "沙特CP"
+        if "mb" in text or "mont belvieu" in text:
+            return "Mont Belvieu"
+        if "nwe" in text or "nwem" in text or "西北欧" in text:
+            return "西北欧LPG"
+        if "tyo" in text or "东北亚" in text or "japan" in text:
+            return "东北亚丙烷现货"
+        return "丙烷/LPG"
+
+    if sector == "LNG":
+        if "henry" in text or ric.startswith("A7Q") or "美国" in text:
+            return "美国天然气"
+        return "LNG现货/纸货"
+
+    return product or sector or "未分类"
+
+
+def _route_region(ric: str) -> str:
+    route_map = {
+        "TC-AMS-NYC": "欧洲-美国东岸",
+        "TC-FJR-LAV": "中东-地中海",
+        "TC-HOU-AMS": "美国湾-欧洲",
+        "TC-JGA-LAV": "中东-地中海",
+        "TC-LAV-SIN": "地中海-新加坡",
+        "TC-SIN1-NGB": "新加坡-中国",
+        "TC-YOS-SIN": "韩国-新加坡",
+        "TD-BON-HOU": "西非-美国湾",
+        "TD-BON-NGB": "西非-中国",
+        "TD-BON-RDM": "西非-欧洲",
+        "TD-BSR-LAV": "中东-地中海",
+        "TD-CRP-MLF": "美国湾-欧洲",
+        "TD-HOU-RDM": "美国湾-欧洲",
+        "TD-HPT-TAO": "中国沿海",
+        "TD-LPP-SIN": "地中海-新加坡",
+        "TD-RTA-NGB": "中东-中国",
+        "TD-SSO-NGB": "中东-中国",
+    }
+    return route_map.get(ric.upper(), "")
+
+
+def _refine_region(row: pd.Series, refined_product: str) -> str:
+    sector = str(row.get("sector") or "").strip()
+    region = str(row.get("region") or "").strip()
+    text = _row_text(row)
+    ric = str(row.get("ric") or "").strip().upper()
+
+    if sector == "Crude":
+        if refined_product in {"WTI", "WTI/Cushing体系", "美湾现货原油"}:
+            return "美国"
+        if refined_product in {"Brent", "Brent CFD", "Brent DFL"}:
+            return "北海/欧洲"
+        if refined_product in {"Dubai", "Murban原油"}:
+            return "中东"
+        if refined_product == "SC原油":
+            return "中国"
+        if refined_product == "Dubai-Brent价差":
+            return "中东-欧洲"
+
+    if sector == "Gasoline":
+        if refined_product == "RBOB汽油":
+            return "美国"
+        if refined_product == "欧洲EBOB汽油":
+            return "欧洲"
+        if refined_product.startswith("新加坡"):
+            return "新加坡"
+
+    if sector == "Naphtha":
+        if refined_product in {"日本CFR石脑油", "MOPJ裂解/价差", "石脑油贴水"}:
+            return "日本/东北亚"
+        if refined_product == "东西石脑油价差":
+            return "欧洲-亚洲"
+
+    if sector == "Diesel":
+        if refined_product.startswith("欧洲"):
+            return "欧洲"
+        if refined_product.startswith("新加坡"):
+            return "新加坡"
+
+    if sector == "Jet/Heating Oil":
+        if refined_product == "NYMEX取暖油":
+            return "美国"
+        if refined_product == "美国湾航煤":
+            return "美国湾"
+        if refined_product == "欧洲航煤":
+            return "欧洲"
+        if refined_product == "新加坡航煤":
+            return "新加坡"
+
+    if sector == "Propane/LPG":
+        if refined_product == "FEI丙烷":
+            return "亚洲"
+        if refined_product == "西北欧LPG":
+            return "西北欧"
+        if refined_product == "东北亚丙烷现货":
+            return "东北亚"
+        if refined_product == "沙特CP":
+            return "中东"
+        if refined_product == "Mont Belvieu":
+            return "美国"
+
+    if sector == "Fuel Oil":
+        if _has_any(text, ["singapore", "新加坡", "sgsw"]):
+            return "新加坡"
+        if _has_any(text, ["europe", "欧洲", "nwe", "ara", "hfofaraa"]):
+            return "欧洲"
+
+    if sector == "Cracks":
+        if refined_product.startswith("新加坡"):
+            return "新加坡"
+        if refined_product in {"RBOB-WTI裂解", "HO-WTI裂解"}:
+            return "美国"
+        if refined_product in {"LSGO-Brent裂解", "欧洲汽油裂解", "欧洲航煤裂解"}:
+            return "欧洲"
+
+    if sector == "Margins":
+        if _has_any(text, ["singapore", "新加坡", "sgm", "sgcs"]):
+            return "新加坡"
+        if _has_any(text, ["med", "地中海"]):
+            return "地中海"
+        if _has_any(text, ["nwe", "rot", "欧洲", "西北欧"]):
+            return "西北欧"
+        if _has_any(text, ["usg", "wti-usg", "美国"]):
+            return "美国湾"
+
+    if sector == "Freight":
+        route_region = _route_region(ric)
+        if route_region:
+            return route_region
+
+    if sector == "LNG":
+        if refined_product == "美国天然气":
+            return "美国"
+
+    cn_region = {
+        "Global": "全球",
+        "US": "美国",
+        "Europe": "欧洲",
+        "Singapore": "新加坡",
+        "China": "中国",
+        "Japan": "日本",
+        "Korea": "韩国",
+        "Middle East": "中东",
+        "Mediterranean": "地中海",
+    }
+    return cn_region.get(region, region or "未标注")
+
+
 def long_to_wide(df: pd.DataFrame, normalized: bool = True) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
@@ -74,6 +354,8 @@ def catalog_with_labels(df: pd.DataFrame) -> pd.DataFrame:
     if catalog.empty:
         return catalog
     catalog = catalog.copy()
+    catalog["product"] = catalog.apply(_refine_product, axis=1)
+    catalog["region"] = catalog.apply(lambda row: _refine_region(row, str(row.get("product") or "")), axis=1)
     labels = []
     for _, row in catalog.iterrows():
         parts = [

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import hashlib
+import shutil
 import sys
 import textwrap
 import types
@@ -141,8 +143,8 @@ SECTOR_CN = {
 }
 
 STRUCTURE_CN = {
-    "backwardation": "Backwardation",
-    "contango": "Contango",
+    "backwardation": "现货升水",
+    "contango": "远期升水",
     "flat": "平水",
     "flat/spot": "现货 / 无曲线",
 }
@@ -243,8 +245,9 @@ def _inject_theme(theme: str) -> None:
         }}
         .nap-status-label {{
             color: var(--nap-muted);
-            font-size: 0.72rem;
+            font-size: 0.74rem;
             line-height: 1.1;
+            font-weight: 680;
         }}
         .nap-status-value {{
             color: var(--nap-text);
@@ -374,6 +377,27 @@ def _inject_theme(theme: str) -> None:
             border-radius: 8px;
             padding: 0.7rem 0.8rem;
         }}
+        section[data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInstructions"] span {{
+            font-size: 0;
+        }}
+        section[data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInstructions"] span::after {{
+            content: "拖拽 Excel 到这里";
+            font-size: 0.92rem;
+        }}
+        section[data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInstructions"] small {{
+            font-size: 0;
+        }}
+        section[data-testid="stFileUploaderDropzone"] div[data-testid="stFileUploaderDropzoneInstructions"] small::after {{
+            content: "单个文件上限 200MB · XLSX";
+            font-size: 0.82rem;
+        }}
+        section[data-testid="stFileUploaderDropzone"] button {{
+            font-size: 0;
+        }}
+        section[data-testid="stFileUploaderDropzone"] button::after {{
+            content: "选择文件";
+            font-size: 0.9rem;
+        }}
         @media (max-width: 980px) {{
             .nap-topbar {{ grid-template-columns: 1fr 1fr; }}
             .nap-brand {{ grid-column: 1 / -1; }}
@@ -450,6 +474,73 @@ def _filter_by_option(frame: pd.DataFrame, column: str, value: str) -> pd.DataFr
     return frame[frame[column].fillna("").astype(str).str.strip() == value]
 
 
+def _default_index(options: list[str], *keywords: str) -> int:
+    lowered = [keyword.lower() for keyword in keywords if keyword]
+    for idx, option in enumerate(options):
+        text = str(option).lower()
+        if all(keyword in text for keyword in lowered):
+            return idx
+    for idx, option in enumerate(options):
+        text = str(option).lower()
+        if any(keyword in text for keyword in lowered):
+            return idx
+    return 0
+
+
+def _workbook_signature(path: str | Path) -> str:
+    workbook = Path(path)
+    if not workbook.exists():
+        return "missing"
+    stat = workbook.stat()
+    try:
+        resolved = str(workbook.resolve())
+    except OSError:
+        resolved = str(workbook)
+    return f"{resolved}|{stat.st_size}|{stat.st_mtime_ns}"
+
+
+def _signature_cache_path(base_cache_path: str | Path, signature: str) -> Path:
+    base = Path(base_cache_path)
+    token = hashlib.blake2b(signature.encode("utf-8"), digest_size=6).hexdigest()
+    return base.with_name(f"{base.stem}_{token}{base.suffix}")
+
+
+def _cache_files(cache_path: Path) -> list[Path]:
+    return [cache_path, cache_path.with_suffix(cache_path.suffix + ".pkl")]
+
+
+def _existing_cache_file(cache_path: Path) -> Path | None:
+    for candidate in _cache_files(cache_path):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _bootstrap_signature_cache(cache_path: Path, workbook_path: str | Path) -> None:
+    workbook = Path(workbook_path)
+    if _existing_cache_file(cache_path) is not None or not workbook.exists():
+        return
+    source = _existing_cache_file(default_cache_path())
+    if source is None or source.stat().st_mtime < workbook.stat().st_mtime:
+        return
+    target = cache_path.with_suffix(cache_path.suffix + ".pkl") if source.name.endswith(".pkl") else cache_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+
+
+def _persist_uploaded_workbook(uploaded_file) -> tuple[str | None, str | None]:
+    if uploaded_file is None:
+        return None, None
+    payload = uploaded_file.getvalue()
+    digest = hashlib.blake2b(payload, digest_size=10).hexdigest()
+    upload_dir = BASE_DIR / "data" / "raw" / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    path = upload_dir / f"Nap_upload_{digest}.xlsx"
+    if not path.exists() or path.stat().st_size != len(payload):
+        path.write_bytes(payload)
+    return str(path), digest
+
+
 def _load_yaml(path: Path) -> dict:
     if not path.exists():
         return {}
@@ -468,7 +559,7 @@ def _lookup_explanation(explanations: dict, series_id: str, meta: pd.Series | di
 
 
 @st.cache_data(show_spinner=False)
-def _cached_load(workbook_path: str, cache_path: str, catalog_path: str, refresh_token: int) -> pd.DataFrame:
+def _cached_load(workbook_path: str, cache_path: str, catalog_path: str, refresh_token: int, workbook_signature: str) -> pd.DataFrame:
     return load_nap_timeseries(workbook_path, cache_path=cache_path, catalog_path=catalog_path, refresh=refresh_token > 0)
 
 
@@ -481,15 +572,25 @@ def _sidebar() -> dict[str, object]:
     )
     theme = st.sidebar.radio("主题", ["浅色", "深色"], horizontal=True)
     st.session_state["nap_theme"] = theme
-    workbook_path = st.sidebar.text_input("Nap.xlsx 路径", value=str(DEFAULT_NAP_WORKBOOK))
-    cache_path = st.sidebar.text_input("缓存路径", value=str(default_cache_path()))
-    catalog_path = st.sidebar.text_input("Catalog 路径", value=str(default_catalog_path()))
+    uploaded = st.sidebar.file_uploader("拖入 Nap.xlsx", type=["xlsx"], help="把 Reuters 导出的 Nap.xlsx 拖到这里后，系统会按文件内容重新生成专属缓存，不会复用旧 workbook 的缓存。")
+    uploaded_path, uploaded_digest = _persist_uploaded_workbook(uploaded)
+    workbook_input = st.sidebar.text_input("或输入 Nap.xlsx 路径", value=str(DEFAULT_NAP_WORKBOOK))
+    workbook_path = uploaded_path or workbook_input
+    signature = _workbook_signature(workbook_path)
+    cache_path = _signature_cache_path(default_cache_path(), signature)
+    _bootstrap_signature_cache(cache_path, workbook_path)
+    catalog_path = st.sidebar.text_input("序列目录路径", value=str(default_catalog_path()))
     if "nap_refresh_token" not in st.session_state:
         st.session_state["nap_refresh_token"] = 0
-    if st.sidebar.button("刷新数据缓存", use_container_width=True):
+    if st.sidebar.button("重新解析当前 Excel", use_container_width=True):
         st.session_state["nap_refresh_token"] += 1
         _cached_load.clear()
-    st.sidebar.caption("优先缓存为 parquet；本机 parquet 引擎不可用时自动使用本地 pickle 兜底。")
+    source_label = "拖拽上传" if uploaded_path else "路径读取"
+    st.sidebar.caption(
+        f"数据来源：{source_label}。当前文件会按路径、大小和修改时间生成独立缓存；Excel 更新后会自动重新计算，不会被旧缓存覆盖。"
+    )
+    st.sidebar.caption(f"当前文件：{workbook_path}")
+    st.sidebar.caption(f"缓存文件：{cache_path.name}")
     return {
         "page": PAGE_OPTIONS[page],
         "theme": theme,
@@ -497,6 +598,8 @@ def _sidebar() -> dict[str, object]:
         "cache_path": cache_path,
         "catalog_path": catalog_path,
         "refresh_token": st.session_state["nap_refresh_token"],
+        "workbook_signature": signature,
+        "uploaded_digest": uploaded_digest or "",
     }
 
 
@@ -510,7 +613,7 @@ def _render_topbar(df: pd.DataFrame, workbook_path: str) -> None:
         f"""
         <div class="nap-topbar">
           <div class="nap-brand">
-            <div class="nap-brand-kicker">REUTERS EXCEL RESEARCH TERMINAL</div>
+            <div class="nap-brand-kicker">REUTERS EXCEL 交易研究终端</div>
             <div class="nap-brand-title">NAP 多品种交易研究看板</div>
           </div>
           <div class="nap-status"><div class="nap-status-label">数据更新时间</div><div class="nap-status-value">{mtime_text}</div></div>
@@ -721,16 +824,25 @@ def render_series_detail(df: pd.DataFrame, explanations: dict) -> None:
         _safe_dataframe(series.tail(120).to_frame("value").rename(columns={"value": "数值"}), use_container_width=True)
     with right:
         explanation = _lookup_explanation(explanations, series_id, meta)
+        unit_native = meta.get("unit_native", "-")
+        unit_normalized = meta.get("unit_normalized") or unit_native
+        if unit_native != unit_normalized:
+            unit_note = f"原始单位为 {unit_native}，看板计算和跨品种比较使用 {unit_normalized}。"
+        else:
+            unit_note = f"当前序列使用 {unit_normalized}，跨品种比较前仍需确认是否为同一报价口径。"
         st.markdown(
             f"""
             <div class="nap-note">
               <strong>{meta["display_name"]}</strong><br>
               RIC: {meta.get("ric", "-")}<br>
-              单位: {meta.get("unit_normalized") or meta.get("unit_native", "-")}<br>
-              市场角色: {explanation.get("market_role", "价格发现 / 交易参考")}<br><br>
+              板块 / 品种 / 地区: {_sector_label(meta.get("sector"))} / {meta.get("product", "-")} / {meta.get("region", "-")}<br>
+              单位: {unit_normalized}<br><br>
+              <strong>市场角色</strong><br>{explanation.get("market_role", "用于观察该市场的绝对价格、远期结构、相对强弱和交易参考。")}<br><br>
               <strong>主要驱动</strong><br>{explanation.get("drivers", "原油、区域供需、炼厂开工、运费和宏观风险偏好。")}<br><br>
+              <strong>相关价差</strong><br>{explanation.get("related_spreads", "可与同区域月差、跨区价差、裂解价差、炼厂利润和运费调整套利一起观察。")}<br><br>
               <strong>交易用途</strong><br>{explanation.get("trading_use", "跟踪绝对价格、结构、裂解价差和相对价值。")}<br><br>
-              <strong>注意事项</strong><br>{explanation.get("notes", "跨市场比较价差前请先确认单位口径。")}
+              <strong>数据口径</strong><br>{unit_note}<br><br>
+              <strong>注意事项</strong><br>{explanation.get("notes", "跨市场比较价差前请先确认单位、合约月份、报价地点和是否为评估价/期货连续合约。")}
             </div>
             """,
             unsafe_allow_html=True,
@@ -777,7 +889,19 @@ def render_seasonality(df: pd.DataFrame) -> None:
             fig.add_trace(go.Scatter(x=band_x, y=band["median"], name="历史中位数", line=dict(color=AMBER, width=1.7)))
         if not matrix.empty:
             latest_year = int(max(matrix.columns))
-            for year in sorted(matrix.columns):
+            year_palette = [
+                "#2f7d8c",
+                "#d29b47",
+                "#7a5c9e",
+                "#4b9b72",
+                "#bf5b5b",
+                "#3f6ea8",
+                "#a86f3f",
+                "#6c8f3f",
+                "#9a5477",
+                "#5d8791",
+            ]
+            for idx, year in enumerate(sorted(matrix.columns)):
                 is_latest = int(year) == latest_year
                 fig.add_trace(
                     go.Scatter(
@@ -785,8 +909,8 @@ def render_seasonality(df: pd.DataFrame) -> None:
                         y=matrix[year],
                         mode="lines",
                         name=str(year),
-                        line=dict(color=ACCENT if is_latest else "rgba(120,132,140,0.55)", width=2.7 if is_latest else 1.25),
-                        opacity=1.0 if is_latest else 0.8,
+                        line=dict(color=year_palette[idx % len(year_palette)], width=3.0 if is_latest else 1.8),
+                        opacity=1.0 if is_latest else 0.92,
                     )
                 )
         fig.update_xaxes(title="月份", tickformat="%m月", dtick="M1")
@@ -931,9 +1055,32 @@ def render_forward_curve(df: pd.DataFrame) -> None:
     if groups.empty:
         st.info("没有识别到远期曲线。")
         return
-    options = {f"{_sector_label(r.sector)} / {r.product} / {r.region} ({r.count})": (r.sector, r.product, r.region) for r in groups.itertuples()}
-    selected = st.selectbox("曲线组", list(options))
-    sector, product, region = options[selected]
+    st.markdown(
+        """
+        <div class="nap-note">
+        <strong>远期曲线说明</strong><br>
+        这里按同一板块、同一品种、同一地区的 M1-Mn 连续合约组装曲线。当前曲线与 1周前、1个月前、3个月前对比，
+        用来观察月间结构、升贴水变化以及近月是否处于 backwardation 或 contango。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    groups = groups.copy()
+    sector_options = _sector_order(sorted(groups["sector"].dropna().astype(str).unique()))
+    cols = st.columns(3)
+    sector_label_map = {_sector_label(value): value for value in sector_options}
+    selected_sector_label = cols[0].selectbox("板块", list(sector_label_map), key="curve_sector")
+    sector = sector_label_map[selected_sector_label]
+    sector_groups = groups[groups["sector"] == sector]
+
+    product_options = sorted(sector_groups["product"].dropna().astype(str).unique())
+    product = cols[1].selectbox("品种", product_options, key="curve_product")
+    product_groups = sector_groups[sector_groups["product"] == product]
+
+    region_options = sorted(product_groups["region"].dropna().astype(str).unique())
+    region = cols[2].selectbox("地区", region_options, key="curve_region")
+    selected_count = int(product_groups[product_groups["region"] == region]["count"].iloc[0])
+    selected = f"{selected_sector_label} / {product} / {region} ({selected_count})"
     curve_hist = build_curve_history(df, sector, product, region)
     if curve_hist.empty:
         st.warning("当前曲线组没有可用数据。")
@@ -1032,26 +1179,60 @@ def render_freight_arbitrage(df: pd.DataFrame) -> None:
         _download_csv("下载运费路线 CSV", frame, "nap_freight_routes.csv", "download_freight")
 
     st.markdown("#### 运费调整套利")
+    st.markdown(
+        """
+        <div class="nap-note">
+        <strong>套利计算口径</strong><br>
+        图中序列按 <strong>终点价格 - 起点价格 - 运费 × 运费倍数</strong> 计算，并且只保留三条序列同日都有报价的日期。
+        结果大于 0 表示终点市场价格相对“起点价格 + 运费”更强；结果小于 0 表示把货运到终点后的经济性偏弱。
+        运费倍数用于处理不同报价口径或需要折算的路线，默认为 1。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     price_cols = st.columns(2)
     with price_cols[0]:
-        origin_id = _series_selector(catalog, "arb_origin", default_query="WTI", label="起点价格", allow_all_sector=True)
+        origin_id = _series_selector(catalog, "arb_origin", default_query="Jet NEW M1", label="起点价格", allow_all_sector=True)
     with price_cols[1]:
-        dest_id = _series_selector(catalog, "arb_dest", default_query="Singapore", label="终点价格", allow_all_sector=True)
+        dest_id = _series_selector(catalog, "arb_dest", default_query="Jet Sin M1", label="终点价格", allow_all_sector=True)
     route_cols = st.columns([1, 0.35])
-    route = route_cols[0].selectbox("运费", list(route_labels), key="arb_route")
+    route_options = list(route_labels)
+    route = route_cols[0].selectbox("运费", route_options, index=_default_index(route_options, "TC-LAV-SIN"), key="arb_route")
     factor = route_cols[1].number_input("运费倍数", value=1.0, step=0.25)
     if not origin_id or not dest_id:
         return
     if origin_id == dest_id:
         st.info("请选择不同的起点和终点价格。")
         return
-    spread = build_spread_series(wide, [(dest_id, 1.0), (origin_id, -1.0), (route_labels[route], -factor)])
-    if not spread.empty:
-        fig = px.line(spread.rename("运费调整套利"), title="终点 - 起点 - 运费", template=_plot_template())
-        fig.update_yaxes(title="价差")
-        _apply_fig_layout(fig, "终点 - 起点 - 运费")
-        st.plotly_chart(fig, use_container_width=True)
-        _download_csv("下载套利序列 CSV", spread.to_frame("spread"), "nap_freight_adjusted_arbitrage.csv", "download_arbitrage")
+    route_id = route_labels[route]
+    labels = display_lookup(catalog)
+    aligned = pd.concat(
+        [
+            _series_from_wide(wide, dest_id).rename("终点价格"),
+            _series_from_wide(wide, origin_id).rename("起点价格"),
+            _series_from_wide(wide, route_id).rename("运费"),
+        ],
+        axis=1,
+    ).dropna()
+    if aligned.empty:
+        st.warning("起点、终点和运费三条序列没有重叠日期，请调整选择或检查报价频率。")
+        return
+    aligned["运费调整套利"] = aligned["终点价格"] - aligned["起点价格"] - aligned["运费"] * float(factor)
+    latest = aligned.iloc[-1]
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("最新套利", _fmt(latest["运费调整套利"]))
+    metric_cols[1].metric("终点价格", _fmt(latest["终点价格"]))
+    metric_cols[2].metric("起点价格", _fmt(latest["起点价格"]))
+    metric_cols[3].metric("运费调整项", _fmt(latest["运费"] * float(factor)))
+    st.caption(
+        f"当前公式：{labels.get(dest_id, dest_id)} - {labels.get(origin_id, origin_id)} - "
+        f"{labels.get(route_id, route_id)} × {_fmt(factor)}"
+    )
+    fig = px.line(aligned["运费调整套利"].rename("运费调整套利"), title="终点 - 起点 - 运费", template=_plot_template())
+    fig.update_yaxes(title="价差")
+    _apply_fig_layout(fig, "终点 - 起点 - 运费")
+    st.plotly_chart(fig, use_container_width=True)
+    _download_csv("下载套利序列 CSV", aligned, "nap_freight_adjusted_arbitrage.csv", "download_arbitrage")
 
 
 def render_glossary(df: pd.DataFrame, explanations: dict) -> None:
@@ -1106,6 +1287,7 @@ def run_nap_dashboard() -> None:
             str(controls["cache_path"]),
             str(controls["catalog_path"]),
             int(controls["refresh_token"]),
+            str(controls["workbook_signature"]),
         )
     except Exception as exc:
         st.error(f"加载 NAP workbook 失败: {exc}")

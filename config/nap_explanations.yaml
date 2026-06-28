@@ -1,68 +1,68 @@
 defaults:
   generic:
-    market_role: General market reference used for outright, structure, and relative-value monitoring.
-    drivers: Crude direction, regional supply-demand, refinery operations, freight, inventory, macro risk appetite.
-    related_spreads: Time spreads, regional differentials, cracks, margins, and freight-adjusted arbitrage.
-    trading_use: Track latest level, momentum, seasonality, volatility, and cross-market dislocations.
-    notes: Confirm unit and contract-month convention before comparing with other markets.
+    market_role: "该序列用于观察某一市场、合约或价差的日度变化，是行情地图、季节性、关系分析和风险监控的基础输入。"
+    drivers: "核心驱动通常包括原油方向、区域供需、库存、炼厂开工、物流运费、宏观风险偏好以及合约换月带来的结构变化。"
+    related_spreads: "建议结合月差、区域价差、裂解价差、炼厂利润和运费调整套利一起观察，避免只看单一绝对价格。"
+    trading_use: "用于跟踪最新水平、短期动量、季节性位置、波动率、分位数和跨市场相对价值。"
+    notes: "跨品种比较前要确认单位、报价地点、合约月份、是否为评估价或连续期货；同名序列也可能代表不同地区或不同合约。"
   Crude:
-    market_role: Global crude benchmark and anchor for product cracks and refinery margin analysis.
-    drivers: OPEC+ policy, inventories, refinery runs, geopolitical risk, USD, rates, and macro demand.
-    related_spreads: Brent-WTI, Dubai-Brent, M1-M2, M1-M3, gasoline crack, diesel crack.
-    trading_use: Benchmark outright risk, forward structure, beta for products, and refinery economics.
-    notes: Compare contract-month alignment before calculating cracks.
+    market_role: "原油是成品油、石脑油、燃料油和炼厂利润的定价锚，适合用来判断大宗能源价格中枢和产品 beta。"
+    drivers: "OPEC+政策、库存、炼厂采购、地缘风险、美元和利率、宏观需求预期以及 Brent/WTI/Dubai 之间的区域平衡。"
+    related_spreads: "Brent-WTI、Dubai-Brent、M1-M2、M1-M3、原油贴水、产品裂解价差和炼厂利润。"
+    trading_use: "用于判断绝对价格趋势、远期结构、跨区原油强弱，以及产品裂解和炼厂利润的原油成本端。"
+    notes: "计算裂解价差时必须对齐合约月份；不同原油基准代表不同地区、质量和交割体系。"
   Gasoline:
-    market_role: Light-end product benchmark for driving season demand and refinery yield value.
-    drivers: US driving demand, blending economics, refinery outages, inventories, RVP shifts, freight.
-    related_spreads: RBOB-WTI, Singapore 92R crack, M1-M2, regional gasoline arbitrage.
-    trading_use: Monitor crack strength, seasonality, regional arb, and inventory stress.
-    notes: RBOB and HO futures are quoted in USD/gal and normalized to USD/bbl by multiplying by 42.
+    market_role: "汽油反映轻质油品和驾驶季需求，是炼厂轻端收益和区域调油经济性的核心指标。"
+    drivers: "驾驶季需求、RVP规格切换、调油组分、炼厂检修、库存、出口套利、运费和原油波动。"
+    related_spreads: "RBOB-WTI、新加坡92裂解、EBOB裂解、汽油月差、欧美亚区域价差和运费调整套利。"
+    trading_use: "用于观察汽油裂解强弱、季节性旺淡季、区域套利窗口和库存压力。"
+    notes: "RBOB 期货原始单位为 USD/gal，看板会乘以 42 转为 USD/bbl，便于和原油及其他产品比较。"
   Jet/Heating Oil:
-    market_role: Distillate benchmark linking heating oil futures, jet fuel, and middle distillate cracks.
-    drivers: Winter demand, aviation demand, refinery yields, diesel substitution, inventories, freight.
-    related_spreads: HO-WTI, jet regrade, distillate cracks, M1-M2.
-    trading_use: Track middle-distillate strength, seasonality, and refinery margin contribution.
-    notes: Heating Oil futures are quoted in USD/gal and normalized to USD/bbl by multiplying by 42.
+    market_role: "航煤/取暖油连接航空需求、冬季取暖需求和中馏分裂解，是柴油和航煤相对强弱的重要参考。"
+    drivers: "航空出行、冬季天气、柴油替代需求、炼厂中馏分收率、库存、出口流向、运费和规格差异。"
+    related_spreads: "HO-WTI、航煤裂解、Jet regrade、地区航煤价差、M1-M2和中馏分综合裂解。"
+    trading_use: "用于跟踪中馏分强弱、航煤相对柴油的溢价、季节性和区域供需错配。"
+    notes: "Heating Oil 期货原始单位为 USD/gal，看板会乘以 42 转为 USD/bbl；航煤不同地区报价口径需单独确认。"
   Diesel:
-    market_role: Middle distillate benchmark for industrial demand and refinery margin analysis.
-    drivers: Industrial demand, exports, refinery outages, gasoil stocks, sanctions, freight.
-    related_spreads: LSGO-Brent, diesel cracks, gasoil time spreads.
-    trading_use: Monitor distillate crack momentum, curve structure, and regional dislocations.
-    notes: Some gasoil contracts are USD/mt and should not be directly compared with USD/bbl prices without conversion assumptions.
+    market_role: "柴油代表工业、运输和出口需求，是炼厂中馏分利润和经济活动强弱的重要指标。"
+    drivers: "工业需求、卡车和航运活动、炼厂开工、气柴油库存、制裁和贸易流、冬季需求及运费。"
+    related_spreads: "LSGO-Brent、10ppm柴油裂解、柴油月差、欧洲-亚洲柴油价差和中馏分库存。"
+    trading_use: "用于观察柴油裂解动量、曲线结构、跨区套利和炼厂中馏分收益。"
+    notes: "部分柴油或gasoil序列可能为 USD/mt，和 USD/bbl 序列比较时需要密度或转换假设。"
   Naphtha:
-    market_role: Petrochemical feedstock benchmark tied to steam crackers, gasoline blending, and LPG substitution.
-    drivers: Crude, petrochemical margins, cracker runs, gasoline blending demand, LPG-naphtha economics, Asian imports.
-    related_spreads: Naphtha-Brent, MOPJ spreads, LPG-naphtha, time spreads.
-    trading_use: Track petrochemical feedstock value, Asian structure, and cracker economics.
-    notes: Watch half-month and front-month naming conventions in Japan/Singapore series.
+    market_role: "石脑油是蒸汽裂解、汽油调和和 LPG 替代经济性的关键原料，尤其适合观察亚洲化工需求。"
+    drivers: "原油、化工利润、裂解装置开工、汽油调和需求、LPG-石脑油替代、亚洲进口和船货到港。"
+    related_spreads: "MOPJ-Brent、MOPJ裂解、东西石脑油价差、LPG-石脑油、CFR日本月差和地区贴水。"
+    trading_use: "用于判断化工原料相对价值、亚洲到岸结构、裂解经济性和轻烃替代窗口。"
+    notes: "日本CFR、MOPJ、东西价差和半月现货命名容易混淆，比较前要确认报价地区和合约月份。"
   Propane:
-    market_role: LPG benchmark used for petrochemical feedstock switching and regional import economics.
-    drivers: US exports, Middle East supply, PDH demand, weather, shipping, propane-naphtha substitution.
-    related_spreads: CP-FEI, FEI-MB, LPG-naphtha, propane time spreads.
-    trading_use: Monitor LPG relative value, import margins, and feedstock switching signals.
-    notes: Contract naming may mix physical assessments and futures-style continuous months.
+    market_role: "丙烷/LPG用于判断轻烃供需、PDH经济性和相对石脑油的化工原料替代价值。"
+    drivers: "美国出口、中东供应、PDH开工、天气、船期、库存和丙烷-石脑油替代经济性。"
+    related_spreads: "FEI-CP、FEI-MB、CP-MB-运费、LPG-石脑油和丙烷月差。"
+    trading_use: "用于观察 LPG 相对价值、亚洲进口经济性和化工端原料切换。"
+    notes: "LPG中可能混合现货评估价和连续合约，使用前要确认是否同一合约体系。"
   Fuel Oil:
-    market_role: Residual fuel benchmark for bunker demand, refinery residue value, and high-low sulphur spread.
-    drivers: Bunker demand, refinery runs, Russian flows, sulphur spreads, crude quality, freight.
-    related_spreads: Hi-5, HSFO crack, VLSFO crack, time spreads.
-    trading_use: Track bunker economics, residue cracks, and sulphur regulation premia.
-    notes: USD/mt fuel oil values are not directly comparable to USD/bbl crude without density assumptions.
+    market_role: "燃料油反映船燃、炼厂渣油价值和高低硫价差，是重油和低硫规范影响的核心窗口。"
+    drivers: "船燃需求、炼厂开工、俄罗斯流向、硫含量规格、原油质量、库存、运费和炼厂转化装置利润。"
+    related_spreads: "Hi-5、HSFO裂解、VLSFO裂解、燃料油月差和高低硫区域价差。"
+    trading_use: "用于跟踪船燃经济性、渣油裂解、硫含量溢价和区域供需错配。"
+    notes: "燃料油常见 USD/mt 报价，与 USD/bbl 原油比较时需要密度假设；高硫和低硫不能直接混用。"
   Freight:
-    market_role: Route-level transport cost for crude and product arbitrage.
-    drivers: Vessel supply, tonne-mile demand, port delays, sanctions, seasonality, bunker fuel costs.
-    related_spreads: Freight-adjusted USGC-Asia, Middle East-Asia, Europe-US arbitrage.
-    trading_use: Adjust regional price spreads for delivered economics.
-    notes: Route units are treated as USD/bbl when Reuters field is Voyage Rate (BBL).
+    market_role: "运费是跨区域套利的成本项，用于把起点价格转换成到岸或交付经济性。"
+    drivers: "船舶供给、吨海里需求、港口拥堵、制裁和绕航、季节性、燃料成本和区域贸易流。"
+    related_spreads: "USGC-Asia、Europe-Asia、Middle East-Asia、原油/成品油到岸套利和区域价差。"
+    trading_use: "用于判断区域价差是否足以覆盖运输成本，以及套利窗口是否打开。"
+    notes: "Voyage Rate (BBL) 按 USD/bbl 处理；若运费报价口径和价格序列不一致，应调整运费倍数或另做单位转换。"
   Cracks:
-    market_role: Product margin indicator versus crude benchmarks.
-    drivers: Product demand, crude moves, refinery outages, inventories, regional imbalances.
-    related_spreads: Gasoline cracks, gasoil cracks, fuel oil cracks, refinery margins.
-    trading_use: Monitor refinery yield value and product relative strength.
-    notes: Crack definitions vary by crude benchmark and region.
+    market_role: "裂解价差代表产品相对原油的边际价值，是炼厂利润和产品供需强弱的直接指标。"
+    drivers: "产品需求、库存、炼厂检修、原油成本、规格切换、出口套利和区域供需失衡。"
+    related_spreads: "汽油裂解、柴油裂解、航煤裂解、燃料油裂解、Hi-5和炼厂利润。"
+    trading_use: "用于判断产品强弱、炼厂收益、季节性位置和跨产品相对价值。"
+    notes: "不同裂解可能使用 Brent、WTI、Dubai 或其他基准，比较时必须确认原油基准和合约月份。"
   Margins:
-    market_role: Refinery margin benchmark for regional crude-product economics.
-    drivers: Product cracks, crude slate, operating rates, inventory, policy, freight.
-    related_spreads: Regional refinery margins, crude differentials, product cracks.
-    trading_use: Track refinery profitability and margin regime shifts.
-    notes: Treat published margin formulas as benchmark conventions, not plant-specific economics.
+    market_role: "炼厂利润用于观察某区域、某原油或某炼厂类型的综合加工经济性。"
+    drivers: "产品裂解、原油基准和贴水、炼厂类型、开工率、库存、政策、运费和区域供需。"
+    related_spreads: "区域炼厂利润、原油差价、汽油/柴油/航煤裂解、燃料油裂解和运费调整价差。"
+    trading_use: "用于判断炼厂开工激励、利润周期、区域强弱和原油采购经济性。"
+    notes: "公开炼厂利润是基准模型，不等于具体炼厂真实利润；应结合原油 slate 和产品收率理解。"
 series: {}
