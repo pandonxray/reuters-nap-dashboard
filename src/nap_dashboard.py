@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import hashlib
+import re
 import shutil
 import sys
 import textwrap
@@ -115,6 +116,7 @@ ACCENT = "#2f7d8c"
 AMBER = "#d29b47"
 NEGATIVE = "#bf5b5b"
 POSITIVE = "#4b9b72"
+NEUTRAL = "#7f8c8d"
 
 
 PAGE_OPTIONS = {
@@ -122,6 +124,7 @@ PAGE_OPTIONS = {
     "序列详情": "detail",
     "季节性": "seasonality",
     "关系实验室": "relationship",
+    "组合价差": "combos",
     "远期曲线": "curve",
     "波动 / 风险": "risk",
     "运费 / 套利": "freight",
@@ -155,6 +158,9 @@ SNAPSHOT_CN = {
     "30D ago": "1个月前",
     "90D ago": "3个月前",
 }
+
+NAPHTHA_BBLS_PER_MT = 8.9
+CONTRACT_MONTHS = [f"M{idx}" for idx in range(1, 13)]
 
 
 def _plot_template() -> str:
@@ -709,6 +715,113 @@ def _series_from_wide(wide: pd.DataFrame, series_id: str) -> pd.Series:
     return wide[series_id].dropna()
 
 
+def _find_series_id(
+    catalog: pd.DataFrame,
+    *,
+    sector: str | None = None,
+    product: str | None = None,
+    region: str | None = None,
+    contract_month: str | None = None,
+    ric_prefix: str | None = None,
+    contains: list[str] | None = None,
+) -> str | None:
+    frame = catalog.copy()
+    for column, value in {
+        "sector": sector,
+        "product": product,
+        "region": region,
+        "contract_month": contract_month,
+    }.items():
+        if value is None or column not in frame.columns:
+            continue
+        frame = frame[frame[column].astype(str).str.casefold() == str(value).casefold()]
+    if ric_prefix:
+        frame = frame[frame["ric"].astype(str).str.upper().str.startswith(ric_prefix.upper(), na=False)]
+    if contains:
+        haystack = (
+            frame.get("display_name", pd.Series("", index=frame.index)).astype(str)
+            + " "
+            + frame.get("short_name", pd.Series("", index=frame.index)).astype(str)
+            + " "
+            + frame.get("ric", pd.Series("", index=frame.index)).astype(str)
+        ).str.casefold()
+        for keyword in contains:
+            frame = frame[haystack.str.contains(str(keyword).casefold(), regex=False, na=False)]
+            haystack = haystack.loc[frame.index]
+    if frame.empty:
+        return None
+    return str(frame.sort_values(["contract_month", "display_name", "ric"]).iloc[0]["series_id"])
+
+
+def _spread_series(
+    wide: pd.DataFrame,
+    left_id: str | None,
+    right_id: str | None,
+    *,
+    right_divisor: float = 1.0,
+) -> pd.Series:
+    if not left_id or not right_id or left_id not in wide.columns or right_id not in wide.columns:
+        return pd.Series(dtype=float)
+    aligned = pd.concat([wide[left_id].rename("left"), wide[right_id].rename("right")], axis=1).dropna()
+    if aligned.empty:
+        return pd.Series(dtype=float)
+    return aligned["left"] - aligned["right"] / float(right_divisor)
+
+
+def _combo_definitions() -> dict[str, dict[str, object]]:
+    return {
+        "新加坡92汽油纸货 - MOPJ（石脑油折 USD/bbl）": {
+            "left": {"sector": "Gasoline", "product": "新加坡92汽油", "region": "新加坡"},
+            "right": {"sector": "Naphtha", "product": "日本CFR石脑油", "region": "日本/东北亚"},
+            "right_divisor": NAPHTHA_BBLS_PER_MT,
+            "unit": "USD/bbl",
+            "description": "新加坡92RON汽油纸货逐月减 MOPJ CFR Japan 石脑油逐月；MOPJ 从 USD/mt 除以 8.9 换算为 USD/bbl。",
+        },
+        "欧洲EBOB汽油纸货 - NWE CIF石脑油（石脑油折 USD/bbl）": {
+            "left": {"sector": "Gasoline", "product": "欧洲EBOB汽油", "region": "欧洲"},
+            "right": {"sector": "Naphtha", "product": "NWE CIF石脑油", "region": "西北欧"},
+            "right_divisor": NAPHTHA_BBLS_PER_MT,
+            "unit": "USD/bbl",
+            "description": "欧洲 EBOB 汽油纸货逐月减 Naphtha CIF NWE outright swap 逐月；NWE 石脑油从 USD/mt 除以 8.9 换算为 USD/bbl。",
+        },
+    }
+
+
+def _monthly_combo_frame(wide: pd.DataFrame, catalog: pd.DataFrame, combo: dict[str, object]) -> tuple[pd.DataFrame, dict[str, pd.Series]]:
+    rows: list[dict[str, object]] = []
+    series_by_month: dict[str, pd.Series] = {}
+    left_selector = dict(combo["left"])  # type: ignore[index]
+    right_selector = dict(combo["right"])  # type: ignore[index]
+    right_divisor = float(combo.get("right_divisor", 1.0))
+    for month in CONTRACT_MONTHS:
+        left_id = _find_series_id(catalog, contract_month=month, **left_selector)
+        right_id = _find_series_id(catalog, contract_month=month, **right_selector)
+        spread = _spread_series(wide, left_id, right_id, right_divisor=right_divisor)
+        if spread.empty:
+            rows.append({"合约": month, "价差": np.nan, "最新日期": pd.NaT, "左腿": left_id or "-", "右腿": right_id or "-"})
+            continue
+        spread.name = month
+        series_by_month[month] = spread
+        rows.append(
+            {
+                "合约": month,
+                "价差": float(spread.iloc[-1]),
+                "1D": float(spread.diff().iloc[-1]) if len(spread) > 1 else np.nan,
+                "5D": float(spread.diff(5).iloc[-1]) if len(spread) > 5 else np.nan,
+                "20D": float(spread.diff(20).iloc[-1]) if len(spread) > 20 else np.nan,
+                "最新日期": spread.index[-1],
+                "左腿": left_id or "-",
+                "右腿": right_id or "-",
+            }
+        )
+    return pd.DataFrame(rows), series_by_month
+
+
+def _contract_number(month: str) -> int:
+    match = re.search(r"(\d+)", str(month))
+    return int(match.group(1)) if match else 999
+
+
 def _apply_fig_layout(fig: go.Figure, title: str | None = None) -> go.Figure:
     title_text = title
     if title_text is None:
@@ -1049,6 +1162,167 @@ def render_relationship_lab(df: pd.DataFrame) -> None:
     _download_csv("下载关系分析数据 CSV", aligned, "nap_relationship_aligned.csv", "download_relationship")
 
 
+def _render_monthly_combo(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
+    combos = _combo_definitions()
+    selected_name = st.selectbox("组合", list(combos), key="combo_spread_name")
+    combo = combos[selected_name]
+    st.markdown(
+        f"""
+        <div class="nap-note">
+        <strong>逐月组合口径</strong><br>
+        {combo["description"]}<br>
+        石脑油换算采用 <strong>1 mt = {NAPHTHA_BBLS_PER_MT:.2f} bbl</strong>，所以 USD/mt 转 USD/bbl 使用 <strong>除以 {NAPHTHA_BBLS_PER_MT:.2f}</strong>。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    curve, series_by_month = _monthly_combo_frame(wide, catalog, combo)
+    if curve.empty or curve["价差"].dropna().empty:
+        st.warning("当前组合没有足够数据，请确认 workbook 已刷新且相关 M1-M12 序列存在。")
+        _safe_dataframe(curve, use_container_width=True, hide_index=True)
+        return
+    curve = curve.copy()
+    curve["month_num"] = curve["合约"].map(_contract_number)
+    curve = curve.sort_values("month_num")
+
+    metric_cols = st.columns(4)
+    latest_m1 = curve[curve["合约"] == "M1"]["价差"].dropna()
+    metric_cols[0].metric("M1 最新价差", _fmt(latest_m1.iloc[-1] if not latest_m1.empty else np.nan))
+    metric_cols[1].metric("最强月份", str(curve.dropna(subset=["价差"]).sort_values("价差", ascending=False).iloc[0]["合约"]))
+    metric_cols[2].metric("最弱月份", str(curve.dropna(subset=["价差"]).sort_values("价差", ascending=True).iloc[0]["合约"]))
+    metric_cols[3].metric("可用月份", f"{curve['价差'].notna().sum()}/12")
+
+    left, right = st.columns([1.35, 1])
+    with left:
+        fig_curve = px.line(curve, x="合约", y="价差", markers=True, title=f"{selected_name} 当前逐月价差", template=_plot_template())
+        fig_curve.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
+        fig_curve.update_yaxes(title=str(combo.get("unit", "价差")))
+        _apply_fig_layout(fig_curve, f"{selected_name} 当前逐月价差")
+        st.plotly_chart(fig_curve, use_container_width=True)
+    with right:
+        table = curve[["合约", "价差", "1D", "5D", "20D", "最新日期"]].copy()
+        _safe_dataframe(table, use_container_width=True, hide_index=True)
+
+    month_options = [month for month in CONTRACT_MONTHS if month in series_by_month]
+    if month_options:
+        selected_month = st.selectbox("历史走势月份", month_options, key="combo_spread_month")
+        spread = series_by_month[selected_month]
+        fig_hist = px.line(spread.rename(f"{selected_month} 价差"), title=f"{selected_name} {selected_month} 历史走势", template=_plot_template())
+        fig_hist.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
+        fig_hist.update_yaxes(title=str(combo.get("unit", "价差")))
+        _apply_fig_layout(fig_hist, f"{selected_name} {selected_month} 历史走势")
+        st.plotly_chart(fig_hist, use_container_width=True)
+        wide_combo = pd.DataFrame(series_by_month).sort_index()
+        _download_csv("下载逐月组合价差 CSV", wide_combo, "nap_monthly_combo_spreads.csv", "download_combo_spreads")
+
+
+def _render_mopj_driver_chart(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
+    st.markdown("#### MOPJ 升贴水 / 裂解 / Brent 对比")
+    st.caption("若 workbook 中没有 Dated Brent 序列，默认用 Brent M1 作为原油价格代理；三个序列默认用 250D z-score 放在同一坐标上比较节奏。")
+    selectors = st.columns(3)
+    with selectors[0]:
+        premium_id = _series_selector(catalog, "mopj_driver_premium", default_query="新加坡贴水", label="MOPJ 升贴水")
+    with selectors[1]:
+        crack_id = _series_selector(catalog, "mopj_driver_crack", default_query="MOPJ裂差", label="MOPJ Crk")
+    with selectors[2]:
+        brent_id = _series_selector(catalog, "mopj_driver_brent", default_query="Brent Swap连1", label="Dated Brent / Brent")
+    if not premium_id or not crack_id or not brent_id:
+        return
+    labels = display_lookup(catalog)
+    frame = pd.concat(
+        [
+            _series_from_wide(wide, premium_id).rename("MOPJ升贴水"),
+            _series_from_wide(wide, crack_id).rename("MOPJ裂解"),
+            _series_from_wide(wide, brent_id).rename("Dated Brent/Brent"),
+        ],
+        axis=1,
+    ).dropna(how="all")
+    if frame.empty:
+        st.warning("三条序列没有可用数据。")
+        return
+    mode = st.radio("对比方式", ["250D z-score", "原始值"], horizontal=True, key="mopj_driver_mode")
+    if mode == "250D z-score":
+        plot_frame = frame.apply(lambda col: (col - col.rolling(250, min_periods=60).mean()) / col.rolling(250, min_periods=60).std())
+        y_title = "Z-score"
+    else:
+        plot_frame = frame
+        y_title = "原始值"
+    fig = px.line(plot_frame.tail(750), title="MOPJ 升贴水 / 裂解 / Brent 对比", template=_plot_template())
+    fig.update_yaxes(title=y_title)
+    _apply_fig_layout(fig, "MOPJ 升贴水 / 裂解 / Brent 对比")
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(f"当前选择：{labels.get(premium_id, premium_id)}；{labels.get(crack_id, crack_id)}；{labels.get(brent_id, brent_id)}")
+    _download_csv("下载 MOPJ 对比 CSV", frame, "nap_mopj_driver_frame.csv", "download_mopj_driver")
+
+
+def _render_time_spread_lab(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
+    st.markdown("#### 月差分析")
+    groups = available_curve_groups(catalog)
+    if groups.empty:
+        st.info("没有可用于月差分析的 M1-Mn 曲线。")
+        return
+    groups = groups[groups["count"] >= 2].copy()
+    cols = st.columns(3)
+    sector_options = _sector_order(sorted(groups["sector"].dropna().astype(str).unique()))
+    sector_map = {_sector_label(value): value for value in sector_options}
+    sector_label = cols[0].selectbox("月差板块", list(sector_map), key="ts_sector")
+    sector = sector_map[sector_label]
+    sector_groups = groups[groups["sector"] == sector]
+    product = cols[1].selectbox("月差品种", sorted(sector_groups["product"].dropna().astype(str).unique()), key="ts_product")
+    product_groups = sector_groups[sector_groups["product"] == product]
+    region = cols[2].selectbox("月差地区", sorted(product_groups["region"].dropna().astype(str).unique()), key="ts_region")
+
+    group_catalog = catalog[
+        (catalog["sector"] == sector)
+        & (catalog["product"] == product)
+        & (catalog["region"] == region)
+        & catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)
+    ].copy()
+    group_catalog["month_num"] = group_catalog["contract_month"].map(_contract_number)
+    group_catalog = group_catalog.sort_values("month_num")
+    month_ids = dict(zip(group_catalog["contract_month"], group_catalog["series_id"]))
+    pairs = [("M1", "M2"), ("M1", "M3"), ("M1", "M6"), ("M2", "M3")]
+    spreads: dict[str, pd.Series] = {}
+    for front, back in pairs:
+        series = _spread_series(wide, month_ids.get(front), month_ids.get(back))
+        if not series.empty:
+            spreads[f"{front}-{back}"] = series
+    if not spreads:
+        st.warning("当前曲线缺少可计算的月差组合。")
+        return
+    spread_frame = pd.DataFrame(spreads).sort_index()
+    latest = spread_frame.dropna(how="all").tail(1).T.reset_index()
+    latest.columns = ["月差", "最新"]
+    fig = px.line(spread_frame.tail(750), title=f"{sector_label} / {product} / {region} 月差走势", template=_plot_template())
+    fig.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
+    fig.update_yaxes(title="近月 - 远月")
+    _apply_fig_layout(fig, f"{sector_label} / {product} / {region} 月差走势")
+    st.plotly_chart(fig, use_container_width=True)
+    _safe_dataframe(latest, hide_index=True, use_container_width=True)
+    _download_csv("下载月差分析 CSV", spread_frame, "nap_time_spreads.csv", "download_time_spreads")
+
+
+def render_combo_spreads(df: pd.DataFrame) -> None:
+    catalog = catalog_with_labels(df)
+    wide = long_to_wide(df, normalized=True)
+    st.markdown(
+        """
+        <div class="nap-note">
+        <strong>组合价差</strong><br>
+        本页把汽油-石脑油的逐月组合、MOPJ 驱动三线图和标准 M1/M2 月差放在一起。所有派生组合只在同日两腿都有报价时计算。
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    tab_combo, tab_driver, tab_time = st.tabs(["汽油-石脑油逐月组合", "MOPJ 驱动对比", "月差分析"])
+    with tab_combo:
+        _render_monthly_combo(catalog, wide)
+    with tab_driver:
+        _render_mopj_driver_chart(catalog, wide)
+    with tab_time:
+        _render_time_spread_lab(catalog, wide)
+
+
 def render_forward_curve(df: pd.DataFrame) -> None:
     catalog = catalog_with_labels(df)
     groups = available_curve_groups(catalog)
@@ -1305,6 +1579,8 @@ def run_nap_dashboard() -> None:
         render_seasonality(df)
     elif page == "relationship":
         render_relationship_lab(df)
+    elif page == "combos":
+        render_combo_spreads(df)
     elif page == "curve":
         render_forward_curve(df)
     elif page == "risk":

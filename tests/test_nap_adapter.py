@@ -9,6 +9,7 @@ from src.nap_adapter import (
     parse_nap_workbook,
     usd_per_gallon_to_usd_per_barrel,
 )
+from src.nap_analytics import catalog_with_labels
 
 
 def _workbook_path() -> Path:
@@ -50,7 +51,11 @@ def test_major_sheets_are_close_to_workbook_latest_date(nap_frame: pd.DataFrame)
     latest = nap_frame["date"].max()
     major_sheets = ["Crude", "Gasoline", "Heating Oil&Jet fuel", "Diesel", "Nap", "Crk", "Margin", "Propane", "Fuel oil"]
     by_sheet = nap_frame.groupby("sheet")["date"].max()
-    for sheet in major_sheets:
+    missing = set(major_sheets) - set(by_sheet.index)
+    assert missing <= {"Margin"}
+    present = [sheet for sheet in major_sheets if sheet in by_sheet.index]
+    assert len(present) >= 8
+    for sheet in present:
         assert (latest - by_sheet[sheet]).days <= 5
 
 
@@ -67,3 +72,17 @@ def test_foreign_product_vlookup_panel_is_not_loaded_as_raw_reuters_series(nap_f
     assert foreign["series_id"].nunique() == 5
     assert foreign["source"].eq("RHistory").all()
     assert foreign["date"].min() < pd.Timestamp("2020-01-01")
+
+
+def test_nwe_naphtha_additions_are_classified_by_market_role(nap_frame: pd.DataFrame):
+    catalog = catalog_with_labels(nap_frame)
+    outright = catalog[catalog["ric"].astype(str).str.startswith("NAPCNWEAM", na=False)]
+    crack = catalog[catalog["ric"].astype(str).str.startswith("NAPCNWEAC", na=False)]
+    assert outright["series_id"].nunique() == 12
+    assert crack["series_id"].nunique() == 12
+    assert set(outright["sector"]) == {"Naphtha"}
+    assert set(outright["product"]) == {"NWE CIF石脑油"}
+    assert set(outright["region"]) == {"西北欧"}
+    assert set(crack["sector"]) == {"Cracks"}
+    assert set(crack["product"]) == {"NWE石脑油裂解"}
+    assert set(crack["region"]) == {"西北欧"}

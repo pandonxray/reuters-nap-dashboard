@@ -78,6 +78,20 @@ def _has_any(text: str, tokens: Iterable[str]) -> bool:
     return any(token.lower() in text for token in tokens)
 
 
+def _refine_sector(row: pd.Series) -> str:
+    sector = str(row.get("sector") or "").strip()
+    text = _row_text(row)
+    ric = str(row.get("ric") or "").strip().upper()
+    if sector == "Naphtha" and (
+        "crack spread" in text
+        or "裂差" in text
+        or ric.startswith("NAPCNWEAC")
+        or "NACFRJPCK" in ric
+    ):
+        return "Cracks"
+    return sector
+
+
 def _refine_product(row: pd.Series) -> str:
     sector = str(row.get("sector") or "").strip()
     product = str(row.get("product") or "").strip()
@@ -117,6 +131,8 @@ def _refine_product(row: pd.Series) -> str:
         return "其他汽油"
 
     if sector == "Naphtha":
+        if "naphtha cif nwe outright" in text or ric.startswith("NAPCNWEAM"):
+            return "NWE CIF石脑油"
         if "mopj" in text or "nacfrjpck" in text or "裂差" in text:
             return "MOPJ裂解/价差"
         if re.search(r"\bew\b", text) or "napjpew" in text:
@@ -153,24 +169,32 @@ def _refine_product(row: pd.Series) -> str:
         return "其他燃料油"
 
     if sector == "Cracks":
-        if "92ron" in text or "mog92sgck" in text:
+        if ric.startswith("NAPCNWEAC") or "naphtha cif nwe" in text:
+            return "NWE石脑油裂解"
+        if "92ron" in text or "MOG92SGCK" in ric:
             return "新加坡92汽油裂解"
-        if "sin go" in text or "go10brtck" in text:
-            return "新加坡柴油裂解"
-        if "fo380" in text or "高硫" in text:
-            return "新加坡高硫裂解"
-        if "ebob" in text:
+        if "EBOBNWECK" in ric or "ebob crack" in text:
             return "欧洲汽油裂解"
-        if "jetfcnwe" in text:
+        if ric.startswith("LGOC") or "gas oil crack" in text or "gasoil crack" in text:
+            return "LSGO-Brent裂解"
+        if "JETFCNWECK" in ric or "eu jet" in text:
             return "欧洲航煤裂解"
-        if "jetsg" in text or "singapore jet" in text:
+        if "JETSGCK" in ric or "singapore jet" in text or "sin jet" in text:
             return "新加坡航煤裂解"
+        if "sin go" in text or "GO10BRTCK" in ric:
+            return "新加坡柴油裂解"
+        if "FO380BRTCK" in ric:
+            return "新加坡高硫裂解"
+        if "HFOFARAAC" in ric or "europe high" in text:
+            return "欧洲高硫裂解"
         if "rbob" in text or ric.startswith("RB"):
             return "RBOB-WTI裂解"
         if "ho" in text or ric.startswith("HO"):
             return "HO-WTI裂解"
         if "lgo" in text or ric.startswith("LGO"):
             return "LSGO-Brent裂解"
+        if "mopj" in text or "NACFRJPCK" in ric:
+            return "MOPJ裂解"
         return "其他裂解价差"
 
     if sector == "Margins":
@@ -260,6 +284,8 @@ def _refine_region(row: pd.Series, refined_product: str) -> str:
             return "新加坡"
 
     if sector == "Naphtha":
+        if refined_product == "NWE CIF石脑油":
+            return "西北欧"
         if refined_product in {"日本CFR石脑油", "MOPJ裂解/价差", "石脑油贴水"}:
             return "日本/东北亚"
         if refined_product == "东西石脑油价差":
@@ -300,11 +326,15 @@ def _refine_region(row: pd.Series, refined_product: str) -> str:
             return "欧洲"
 
     if sector == "Cracks":
+        if refined_product == "NWE石脑油裂解":
+            return "西北欧"
+        if refined_product == "MOPJ裂解":
+            return "日本/东北亚"
         if refined_product.startswith("新加坡"):
             return "新加坡"
         if refined_product in {"RBOB-WTI裂解", "HO-WTI裂解"}:
             return "美国"
-        if refined_product in {"LSGO-Brent裂解", "欧洲汽油裂解", "欧洲航煤裂解"}:
+        if refined_product in {"LSGO-Brent裂解", "欧洲汽油裂解", "欧洲航煤裂解", "欧洲高硫裂解"}:
             return "欧洲"
 
     if sector == "Margins":
@@ -354,6 +384,7 @@ def catalog_with_labels(df: pd.DataFrame) -> pd.DataFrame:
     if catalog.empty:
         return catalog
     catalog = catalog.copy()
+    catalog["sector"] = catalog.apply(_refine_sector, axis=1)
     catalog["product"] = catalog.apply(_refine_product, axis=1)
     catalog["region"] = catalog.apply(lambda row: _refine_region(row, str(row.get("product") or "")), axis=1)
     labels = []

@@ -5267,400 +5267,436 @@ series:
   ric: A7Qc9
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_brt_rot_ref_033f27387e
-  display_name: 欧洲crack炼厂利润
-  sheet: Margin
-  sector: Margins
-  product: Brent
-  region: Europe
-  contract_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: BRT-ROT-REF
+- series_id: nap_nacfrjpckmc1_ce17facc50
+  display_name: MOPJ裂差连1
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M1
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc1
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_nwembrtcokmc1_20464f20b3
-  display_name: 西北欧 coking brt
-  sheet: Margin
-  sector: Margins
-  product: Brent
-  region: Europe
+- series_id: nap_nacfrjpckmc10_3235b19c07
+  display_name: MOPJ裂差连10
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M10
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc10
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc11_4378488b4e
+  display_name: MOPJ裂差连11
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M11
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc11
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc12_7774270c74
+  display_name: MOPJ裂差连12
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M12
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc12
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc2_2162bfca7f
+  display_name: MOPJ裂差连2
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M2
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc2
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc3_fe3c1a3b78
+  display_name: MOPJ裂差连3
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M3
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc3
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc4_6135dc16b3
+  display_name: MOPJ裂差连4
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M4
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc4
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc5_d04f3ab9c2
+  display_name: MOPJ裂差连5
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M5
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc5
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc6_0ce6c89c29
+  display_name: MOPJ裂差连6
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M6
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc6
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc7_e933236cb4
+  display_name: MOPJ裂差连7
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M7
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc7
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc8_4db1159114
+  display_name: MOPJ裂差连8
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M8
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc8
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc9_9879fa22ee
+  display_name: MOPJ裂差连9
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M9
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NACFRJPCKMc9
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc1_830c894353
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 1
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
   contract_month: M1
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  ric: NWEMBRTCOKMc1
+  ric: NAPCNWEACMc1
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_nwembrtcrkmc1_9a962f7fcf
-  display_name: 西北欧 cracking brt
-  sheet: Margin
-  sector: Margins
-  product: Brent
-  region: Europe
+- series_id: nap_napcnweacmc10_45b038d8a6
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 10
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M10
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc10
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc11_a981961487
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 11
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M11
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc11
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc12_d3a97270ef
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 12
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M12
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc12
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc2_20712a5eec
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 2
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M2
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc2
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc3_49ef37cd59
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 3
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M3
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc3
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc4_644bc421f1
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 4
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M4
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc4
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc5_37ac210edb
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 5
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M5
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc5
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc6_2432204320
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 6
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M6
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc6
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc7_c527b1f594
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 7
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M7
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc7
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc8_dbcc00b315
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 8
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M8
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc8
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweacmc9_12e63b2fc3
+  display_name: Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 9
+  sheet: Nap
+  sector: Cracks
+  product: NWE Naphtha Crack
+  region: Northwest Europe
+  contract_month: M9
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  ric: NAPCNWEACMc9
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_napcnweamc1_0b73e55d7a
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 1
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
   contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMBRTCRKMc1
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc1
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_nwembrttopmc1_7af3e52abe
-  display_name: 西北欧 topping brt
-  sheet: Margin
-  sector: Margins
-  product: Brent
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMBRTTOPMc1
+- series_id: nap_napcnweamc10_9759af9e1b
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 10
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M10
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc10
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_medcscrkmc1_e926ebbc8e
-  display_name: 地中海cracking
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDCSCRKMc1
+- series_id: nap_napcnweamc11_52e47881f2
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 11
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M11
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc11
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_medmazecrkmc1_17b1ca7c13
-  display_name: 地中海cracking azeri
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMAZECRKMc1
+- series_id: nap_napcnweamc12_625aeb12a0
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 12
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M12
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc12
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_medmcpccrkmc1_c8b736ee4d
-  display_name: 地中海cracking cpc
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMCPCCRKMc1
+- series_id: nap_napcnweamc2_d545a691f7
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 2
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M2
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc2
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_medmsahcrkmc1_d9e5f57cd5
-  display_name: 地中海cracking saharan
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMSAHCRKMc1
+- series_id: nap_napcnweamc3_5c697526a2
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 3
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M3
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc3
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_url_med_ref_78a5344ea3
-  display_name: 地中海crack炼厂利润
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Mediterranean
-  contract_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: URL-MED-REF
+- series_id: nap_napcnweamc4_765da1ad66
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 4
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M4
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc4
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_sgcscrkmc1_a08cf9f779
-  display_name: 新加坡cracking
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Singapore
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: SGCSCRKMc1
+- series_id: nap_napcnweamc5_38337702a0
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 5
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M5
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc5
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_sgmdubcrkmc1_ab27c8882e
-  display_name: 新加坡cracking dub
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Singapore
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: SGMDUBCRKMc1
+- series_id: nap_napcnweamc6_2aaa75c726
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 6
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M6
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc6
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_sgmmurcrkmc1_1d2d2dadd2
-  display_name: 新加坡cracking murban
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Singapore
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: SGMMURCRKMc1
+- series_id: nap_napcnweamc7_8a98414b1e
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 7
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M7
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc7
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_sgmuzkcrkmc1_18dc05a0ec
-  display_name: 新加坡cracking uz
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Singapore
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: SGMUZKCRKMc1
+- series_id: nap_napcnweamc8_951e2a8db5
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 8
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M8
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc8
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: margin_dub_sin_ref_a8a93024cb
-  display_name: 新加坡crack炼厂利润
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Singapore
-  contract_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: DUB-SIN-REF
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwemurlcrkmc1_adcfc93d48
-  display_name: 西北欧 cracking urals
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMURLCRKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwecscrkmc1_1110cf8c71
-  display_name: 西北欧cracking
-  sheet: Margin
-  sector: Margins
-  product: Crack
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWECSCRKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medcscokmc1_56936b4e53
-  display_name: 地中海coking
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDCSCOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medmazecokmc1_32fdabd945
-  display_name: 地中海coking azeri
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMAZECOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medmcpccokmc1_5f43978049
-  display_name: 地中海coking cpc
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMCPCCOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medmsahcokmc1_928616ca11
-  display_name: 地中海coking saharan
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMSAHCOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medcstopmc1_42979d9e6f
-  display_name: 地中海topping
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDCSTOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medmazetopmc1_b0b85a02b4
-  display_name: 地中海topping azeri
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMAZETOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medmcpctopmc1_41c305d169
-  display_name: 地中海topping cpc
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMCPCTOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_medmsahtopmc1_ea9f4b8b0d
-  display_name: 地中海topping saharan
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Mediterranean
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: MEDMSAHTOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_sgcstopmc1_2487e761e7
-  display_name: 新加坡topping
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Singapore
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: SGCSTOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwemurlcokmc1_006d2547b5
-  display_name: 西北欧 coking urals
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMURLCOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwemurltopmc1_a011b8537d
-  display_name: 西北欧 topping urals
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMURLTOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwecscokmc1_0075e915cf
-  display_name: 西北欧coking
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWECSCOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwecstopmc1_cf2ca31cd7
-  display_name: 西北欧topping
-  sheet: Margin
-  sector: Margins
-  product: Refining Margin
-  region: Europe
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWECSTOPMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_wti_usg_ref_b1c508402a
-  display_name: 美国crack炼厂利润
-  sheet: Margin
-  sector: Margins
-  product: WTI
-  region: US
-  contract_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: WTI-USG-REF
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwemwticokmc1_59cf6e12b7
-  display_name: 西北欧 coking WTI
-  sheet: Margin
-  sector: Margins
-  product: WTI
-  region: US
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMWTICOKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwemwticrkmc1_78f6d960b8
-  display_name: 西北欧 cracking WTI
-  sheet: Margin
-  sector: Margins
-  product: WTI
-  region: US
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMWTICRKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: margin_nwemwtitopmc1_4a3cc2b272
-  display_name: 西北欧 topping WTI
-  sheet: Margin
-  sector: Margins
-  product: WTI
-  region: US
-  contract_month: M1
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  ric: NWEMWTITOPMc1
+- series_id: nap_napcnweamc9_a09404524f
+  display_name: Naphtha CIF NWE Outright Swap Monthly Continuation 9
+  sheet: Nap
+  sector: Naphtha
+  product: NWE CIF Naphtha
+  region: Northwest Europe
+  contract_month: M9
+  unit_native: USD/mt
+  unit_normalized: USD/mt
+  ric: NAPCNWEAMc9
   is_derived: false
   source: RDP.HistoricalPricing
 - series_id: nap_napjpewmc1_f4bb1deaf3
@@ -5805,150 +5841,6 @@ series:
   unit_native: USD/mt
   unit_normalized: USD/mt
   ric: NAPJPEWMc9
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc1_ce17facc50
-  display_name: MOPJ裂差连1
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M1
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc10_3235b19c07
-  display_name: MOPJ裂差连10
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M10
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc10
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc11_4378488b4e
-  display_name: MOPJ裂差连11
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M11
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc11
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc12_7774270c74
-  display_name: MOPJ裂差连12
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M12
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc12
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc2_2162bfca7f
-  display_name: MOPJ裂差连2
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M2
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc2
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc3_fe3c1a3b78
-  display_name: MOPJ裂差连3
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M3
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc3
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc4_6135dc16b3
-  display_name: MOPJ裂差连4
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M4
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc4
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc5_d04f3ab9c2
-  display_name: MOPJ裂差连5
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M5
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc5
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc6_0ce6c89c29
-  display_name: MOPJ裂差连6
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M6
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc6
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc7_e933236cb4
-  display_name: MOPJ裂差连7
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M7
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc7
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc8_4db1159114
-  display_name: MOPJ裂差连8
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M8
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc8
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc9_9879fa22ee
-  display_name: MOPJ裂差连9
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M9
-  unit_native: USD/mt
-  unit_normalized: USD/mt
-  ric: NACFRJPCKMc9
   is_derived: false
   source: RDP.HistoricalPricing
 - series_id: nap_naf_1h_tyo_15c12c4835
@@ -6539,7 +6431,7 @@ series:
   ric: TD-LPP-SIN
   is_derived: false
   source: RHistory
-- series_id: td_rta_ngb_8f897c64ce
+- series_id: td_rta_ngb_d1d476d34e
   display_name: Voyage Rate (BBL)
   sheet: 原油
   sector: Freight

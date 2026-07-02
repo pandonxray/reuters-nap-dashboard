@@ -306,7 +306,15 @@ def _find_pair_start_near(df: pd.DataFrame, anchor_row0: int, anchor_col0: int) 
     return anchor_row0, anchor_col0
 
 
-def _infer_sector(sheet: str, display_name: str) -> str:
+def _infer_sector(sheet: str, display_name: str, ric: str = "") -> str:
+    text = f"{display_name} {ric} {sheet}".lower()
+    ric_upper = ric.upper()
+    if sheet == "Nap" and (
+        "crack spread" in text
+        or ric_upper.startswith("NAPCNWEAC")
+        or ric_upper.startswith("NACFRJPCK")
+    ):
+        return "Cracks"
     return SECTOR_BY_SHEET.get(sheet, "Other")
 
 
@@ -322,6 +330,8 @@ def _infer_region(display_name: str, ric: str, sheet: str) -> str:
         return "Korea"
     if any(token in text for token in ["usgc", "美湾", "hou", "美国", "wti", "nymex"]):
         return "US"
+    if "nwe" in text:
+        return "Northwest Europe"
     if any(token in text for token in ["europe", "欧洲", "nwe", "rotterdam", "阿姆斯特丹", "france", "法国"]):
         return "Europe"
     if any(token in text for token in ["middle east", "中东", "ras tanura", "dubai"]):
@@ -333,6 +343,13 @@ def _infer_region(display_name: str, ric: str, sheet: str) -> str:
 
 def _infer_product(display_name: str, ric: str, sheet: str) -> str:
     text = f"{display_name} {ric} {sheet}".lower()
+    ric_upper = ric.upper()
+    if ric_upper.startswith("NAPCNWEAM") or "naphtha cif nwe outright" in text:
+        return "NWE CIF Naphtha"
+    if ric_upper.startswith("NAPCNWEAC") or "naphtha cif nwe" in text and "crack" in text:
+        return "NWE Naphtha Crack"
+    if ric_upper.startswith("NACFRJPCK") or "mopj" in text and "crack" in text:
+        return "MOPJ Crack"
     if "wti" in text or ric.startswith("CL"):
         return "WTI"
     if "brent" in text or "brt" in text or ric.startswith("LCO"):
@@ -410,7 +427,7 @@ def _series_to_records(
     display_name = parsed.display_name or parsed.short_name or parsed.name_native or parsed.ric
     series_id = _make_series_id(parsed.sheet, display_name, parsed.ric, parsed.value_col)
     unit_native, unit_normalized = _infer_unit(parsed.sheet, display_name, parsed.ric)
-    sector = _infer_sector(parsed.sheet, display_name)
+    sector = _infer_sector(parsed.sheet, display_name, parsed.ric)
     product = _infer_product(display_name, parsed.ric, parsed.sheet)
     region = _infer_region(display_name, parsed.ric, parsed.sheet)
     contract_month = _infer_contract_month(display_name, parsed.ric)

@@ -67,12 +67,15 @@ def evaluate_registry_formula(
     formula: dict[str, Any],
 ) -> pd.Series:
     legs: list[tuple[str, float]] = []
-    for leg in formula.get("legs", []):
+    formula_legs = list(formula.get("legs", []))
+    for leg in formula_legs:
         selector = dict(leg.get("selector", {}))
         series_id = leg.get("series_id") or resolve_leg(catalog, selector)
         if not series_id:
-            continue
+            return pd.Series(dtype=float, name=str(formula.get("name", "custom_formula")))
         legs.append((str(series_id), float(leg.get("weight", 1.0))))
+    if len(legs) != len(formula_legs):
+        return pd.Series(dtype=float, name=str(formula.get("name", "custom_formula")))
     spread = build_spread_series(wide, legs)
     spread.name = str(formula.get("name", "custom_formula"))
     return spread
