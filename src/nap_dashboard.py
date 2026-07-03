@@ -822,6 +822,21 @@ def _contract_number(month: str) -> int:
     return int(match.group(1)) if match else 999
 
 
+def _seasonal_year_palette() -> list[str]:
+    return [
+        "#2f7d8c",
+        "#d29b47",
+        "#7a5c9e",
+        "#4b9b72",
+        "#bf5b5b",
+        "#3f6ea8",
+        "#a86f3f",
+        "#6c8f3f",
+        "#9a5477",
+        "#5d8791",
+    ]
+
+
 def _apply_fig_layout(fig: go.Figure, title: str | None = None) -> go.Figure:
     title_text = title
     if title_text is None:
@@ -1214,6 +1229,49 @@ def _render_monthly_combo(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
         st.plotly_chart(fig_hist, use_container_width=True)
         wide_combo = pd.DataFrame(series_by_month).sort_index()
         _download_csv("下载逐月组合价差 CSV", wide_combo, "nap_monthly_combo_spreads.csv", "download_combo_spreads")
+        _render_combo_m1_seasonality(selected_name, series_by_month, str(combo.get("unit", "价差")))
+
+
+def _render_combo_m1_seasonality(selected_name: str, series_by_month: dict[str, pd.Series], unit: str) -> None:
+    spread = series_by_month.get("M1")
+    if spread is None or spread.dropna().empty:
+        return
+
+    st.markdown("#### M1 季节图")
+    controls = st.columns([0.7, 0.7, 1.8])
+    years = controls[0].selectbox("历史窗口", [5, 10], index=1, format_func=lambda value: f"过去 {value} 年", key="combo_m1_season_years")
+    remove_leap = controls[1].checkbox("剔除 2月29日", value=True, key="combo_m1_season_remove_feb29")
+
+    seasonal_series = spread.dropna()
+    if remove_leap:
+        seasonal_series = remove_feb29(seasonal_series.to_frame("value"))["value"]
+    matrix = seasonal_matrix(seasonal_series, years=int(years))
+    if matrix.empty:
+        st.info("M1 价差暂时没有足够历史数据生成季节图。")
+        return
+
+    x_axis = pd.to_datetime("2001-" + matrix.index.astype(str), errors="coerce")
+    latest_year = int(max(matrix.columns))
+    palette = _seasonal_year_palette()
+    fig = go.Figure()
+    for idx, year in enumerate(sorted(matrix.columns)):
+        is_latest = int(year) == latest_year
+        fig.add_trace(
+            go.Scatter(
+                x=x_axis,
+                y=matrix[year],
+                mode="lines",
+                name=str(year),
+                line=dict(color=palette[idx % len(palette)], width=3.0 if is_latest else 1.8),
+                opacity=1.0 if is_latest else 0.9,
+            )
+        )
+    fig.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
+    fig.update_xaxes(title="月份", tickformat="%m月", dtick="M1")
+    fig.update_yaxes(title=unit)
+    _apply_fig_layout(fig, f"{selected_name} M1 季节图")
+    st.plotly_chart(fig, use_container_width=True)
+    _download_csv("下载 M1 季节图 CSV", matrix, "nap_combo_m1_seasonality.csv", "download_combo_m1_seasonality")
 
 
 def _render_mopj_driver_chart(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
