@@ -1,4 +1,4 @@
 @echo off
 setlocal
-cd /d "%~dp0"
-"D:\Anacoda\Scripts\streamlit.exe" run src\nap_dashboard.py --server.port 8522 --browser.gatherUsageStats false
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0start_nap_dashboard.ps1"
+if errorlevel 1 pause
