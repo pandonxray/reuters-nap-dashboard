@@ -17,7 +17,12 @@ logger = logging.getLogger(__name__)
 
 EXCEL_EPOCH = "1899-12-30"
 GALLONS_PER_PETROLEUM_BARREL = 42.0
-DEFAULT_NAP_WORKBOOK = Path(r"C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap.xlsx")
+NAPHTHA_BBLS_PER_METRIC_TON = 8.9
+EBOB_BBLS_PER_METRIC_TON = 8.33
+GASOIL_BBLS_PER_METRIC_TON = 7.45
+DEFAULT_NAP_WORKBOOK = Path(
+    r"C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_live_formula.xlsx"
+)
 STANDARD_COLUMNS = [
     "date",
     "series_id",
@@ -28,13 +33,15 @@ STANDARD_COLUMNS = [
     "product",
     "region",
     "contract_month",
+    "term_type",
+    "calendar_month",
     "unit_native",
     "unit_normalized",
     "ric",
     "is_derived",
     "source",
 ]
-EXTRA_COLUMNS = ["value_normalized", "name_native", "short_name"]
+EXTRA_COLUMNS = ["value_normalized", "unit_conversion", "unit_source", "name_native", "short_name"]
 RELEVANT_SHEETS = [
     "Crude",
     "Gasoline",
@@ -51,6 +58,52 @@ RELEVANT_SHEETS = [
     "成品油(国内汽柴表)",
     "成品油(国外汽柴表)",
 ]
+
+CALENDAR_MONTH_SHEETS = {
+    "Gasoline_自然月": "Gasoline",
+    "HOJet_自然月": "Heating Oil&Jet fuel",
+    "Diesel_自然月": "Diesel",
+    "Nap_自然月": "Nap",
+    "LNG_自然月": "LNG",
+    "Crk_自然月": "Crk",
+    "Margin_自然月": "Margin",
+    "Propane_自然月": "Propane",
+    "FuelOil_自然月": "Fuel oil",
+}
+CALENDAR_OUTPUT_BY_SOURCE = {source: calendar for calendar, source in CALENDAR_MONTH_SHEETS.items()}
+
+CALENDAR_LABEL_ALIASES = {
+    "RB": "RBOB",
+    "EBOBNWE": "EBOB",
+    "MOG92SG": "新加坡92汽油纸货",
+    "MOG95SG": "新加坡95汽油纸货",
+    "HO": "HO",
+    "JETFUSGC": "Jet USG",
+    "JETFCNWE": "Jet NWE",
+    "JETSG": "Jet Singapore",
+    "LGO": "LSGO",
+    "GO10SG": "新加坡10ppm柴油纸货",
+    "NACFRJP": "MOPJ",
+    "NAPJPEW": "石脑油东西价差",
+    "NACFRJPCK": "MOPJ裂差",
+    "NAPCNWEA": "NWE Naphtha",
+    "NAPCNWEAC": "NWE Naphtha Crack",
+    "A7Q": "美国天然气",
+    "MOG92SGCK": "新加坡92汽油裂差",
+    "EBOBNWECK": "EBOB裂差",
+    "RBCCLC": "RBOB裂差",
+    "GO10BRTCK": "新加坡柴油裂差",
+    "LGOC": "欧洲柴油裂差",
+    "HOCCLC": "HO裂差",
+    "JETSGCK": "新加坡航煤裂差",
+    "JETFCNWECK": "欧洲航煤裂差",
+    "FO380BRTCK": "新加坡高硫裂差",
+    "HFOFARAAC": "欧洲高硫裂差",
+    "PROCNWE": "NWE LPG",
+    "PROFEI": "FEI",
+    "FO380SG": "新加坡高硫燃料油",
+    "HFOFARAA": "欧洲高硫燃料油",
+}
 
 SECTOR_BY_SHEET = {
     "Crude": "Crude",
@@ -145,8 +198,186 @@ def _make_series_id(sheet: str, display_name: str, ric: str, value_col: int) -> 
     return f"{slug}_{suffix}"
 
 
+def _continuous_ric_base(ric: str) -> str:
+    value = str(ric or "").upper()
+    value = re.sub(r"(?:SW)?MC\d{1,2}$", "", value)
+    if re.search(r"[-=/]", value):
+        value = re.sub(r"C\d{1,2}(?=$|[-=/])", "C", value)
+    else:
+        value = re.sub(r"C\d{1,2}$", "", value)
+    return re.sub(r"[^A-Z0-9]+", "", value)
+
+
+def _calendar_base_label(display_name: str, ricbase: str) -> str:
+    if ricbase in CALENDAR_LABEL_ALIASES:
+        return CALENDAR_LABEL_ALIASES[ricbase]
+    label = display_name or ricbase
+    for pattern in [
+        r"\b(monthly\s+)?continuation\s*\d{1,2}\b",
+        r"\bmonth\s+continuation\s*\d{1,2}\b",
+        r"\bM\s*\d{1,2}\b",
+        r"\bc\s*\d{1,2}\b",
+        r"连\s*\d{1,2}",
+    ]:
+        label = re.sub(pattern, "", label, flags=re.IGNORECASE)
+    label = re.sub(r"\s+", " ", label).strip(" -_/")
+    return label or ricbase
+
+
 def usd_per_gallon_to_usd_per_barrel(value: float | pd.Series) -> float | pd.Series:
     return value * GALLONS_PER_PETROLEUM_BARREL
+
+
+def usd_per_metric_ton_to_usd_per_barrel(value: float | pd.Series, barrels_per_metric_ton: float) -> float | pd.Series:
+    return value / barrels_per_metric_ton
+
+
+def _unit_rule(sheet: str, display_name: str, ric: str) -> dict[str, Any]:
+    text = f"{display_name} {ric} {sheet}".lower()
+    sheet_text = str(sheet or "").lower()
+    ric_upper = str(ric or "").upper()
+
+    if (
+        "crack" in text
+        or "crk" in sheet_text
+        or sheet == "Crk"
+        or ric_upper.startswith(("NAPCNWEAC", "CAL_NAPCNWEAC"))
+        or "CK" in ric_upper
+    ):
+        return {
+            "unit_native": "USD/bbl",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/bbl，价差/裂解计算不做桶吨换算。",
+            "source": "Reuters crack spread / exchange crack-spread convention",
+        }
+    if ric_upper.startswith(("RB", "HO")) or "rbob" in text or re.search(r"\bho\b", text):
+        return {
+            "unit_native": "USD/gal",
+            "unit_normalized": "USD/bbl",
+            "factor": GALLONS_PER_PETROLEUM_BARREL,
+            "conversion": f"USD/gal × {GALLONS_PER_PETROLEUM_BARREL:.0f} = USD/bbl。",
+            "source": "CME NYMEX refined products quote convention",
+        }
+    if ric_upper.startswith(("EBOBNWE", "CAL_EBOBNWE")) or "ebob" in text:
+        return {
+            "unit_native": "USD/mt",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0 / EBOB_BBLS_PER_METRIC_TON,
+            "conversion": f"EBOB: USD/mt ÷ {EBOB_BBLS_PER_METRIC_TON:.2f} = USD/bbl。",
+            "source": "ICE/CME Eurobob contract conventions; 1,000 mt = 8,330 bbl",
+        }
+    if ric_upper.startswith(("NAPCNWEAM", "CAL_NAPCNWEA", "NACFRJP", "CAL_NACFRJP")) or (
+        "naphtha" in text and "crack" not in text
+    ):
+        return {
+            "unit_native": "USD/mt",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0 / NAPHTHA_BBLS_PER_METRIC_TON,
+            "conversion": f"石脑油: USD/mt ÷ {NAPHTHA_BBLS_PER_METRIC_TON:.2f} = USD/bbl。",
+            "source": "Naphtha outright quote convention plus dashboard barrel conversion",
+        }
+    if ric_upper.startswith(("LGO", "CAL_LGO")) or "gasoil" in text or "lsgo" in text:
+        return {
+            "unit_native": "USD/mt",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0 / GASOIL_BBLS_PER_METRIC_TON,
+            "conversion": f"LSGO/Gasoil: USD/mt ÷ {GASOIL_BBLS_PER_METRIC_TON:.2f} = USD/bbl。",
+            "source": "ICE gasoil crack-spread convention",
+        }
+    if sheet == "Crude" or any(token in text for token in ["wti", "brent", "dubai", "oman"]):
+        return {
+            "unit_native": "USD/bbl",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/bbl。",
+            "source": "Crude futures / swaps quote convention",
+        }
+    if sheet in {"Crk", "Margin"}:
+        return {
+            "unit_native": "USD/bbl",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/bbl。",
+            "source": "Reuters crack/margin convention",
+        }
+    if sheet in {"Freight", "原油", "成品油(国内汽柴表)", "成品油(国外汽柴表)"}:
+        return {
+            "unit_native": "USD/bbl",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/bbl。",
+            "source": "Reuters freight route convention",
+        }
+    if sheet in {"Diesel", "Nap", "Propane", "Fuel oil"}:
+        return {
+            "unit_native": "USD/mt",
+            "unit_normalized": "USD/mt",
+            "factor": 1.0,
+            "conversion": "原始为 USD/mt；未参与跨桶价价差时保留吨价。",
+            "source": "Reuters refined products quote convention",
+        }
+    if sheet == "Gasoline":
+        return {
+            "unit_native": "USD/bbl",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/bbl。",
+            "source": "Reuters gasoline quote convention",
+        }
+    if sheet == "LNG":
+        return {
+            "unit_native": "USD/MMBtu",
+            "unit_normalized": "USD/MMBtu",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/MMBtu。",
+            "source": "Reuters LNG/gas quote convention",
+        }
+    return {"unit_native": "", "unit_normalized": "", "factor": 1.0, "conversion": "", "source": ""}
+
+
+def _apply_unit_rule_metadata(frame: pd.DataFrame) -> pd.DataFrame:
+    if frame.empty:
+        return frame
+    out = frame.copy()
+    for col in ["unit_native", "unit_normalized", "unit_conversion", "unit_source"]:
+        if col not in out.columns:
+            out[col] = ""
+    if "value_normalized" not in out.columns:
+        out["value_normalized"] = out.get("value", np.nan)
+    key_col = "series_id" if "series_id" in out.columns else None
+    meta_cols = [col for col in ["series_id", "sheet", "display_name", "ric"] if col in out.columns]
+    if not meta_cols:
+        return out
+    meta = out[meta_cols].drop_duplicates(key_col or meta_cols)
+    rule_rows: list[dict[str, Any]] = []
+    for row in meta.itertuples(index=False):
+        row_dict = dict(zip(meta_cols, row, strict=False))
+        rule = _unit_rule(str(row_dict.get("sheet", "")), str(row_dict.get("display_name", "")), str(row_dict.get("ric", "")))
+        if not rule.get("unit_native"):
+            continue
+        rule_rows.append(
+            {
+                "key": str(row_dict.get(key_col, len(rule_rows))) if key_col else "|".join(str(row_dict.get(col, "")) for col in meta_cols),
+                "unit_native": rule["unit_native"],
+                "unit_normalized": rule["unit_normalized"],
+                "unit_conversion": rule["conversion"],
+                "unit_source": rule["source"],
+                "factor": float(rule["factor"]),
+            }
+        )
+    if not rule_rows:
+        return out
+    rules = pd.DataFrame(rule_rows).drop_duplicates("key").set_index("key")
+    keys = out[key_col].astype(str) if key_col else out[meta_cols].astype(str).agg("|".join, axis=1)
+    for col in ["unit_native", "unit_normalized", "unit_conversion", "unit_source"]:
+        mapped = keys.map(rules[col])
+        mask = mapped.notna()
+        if mask.any():
+            out.loc[mask, col] = mapped[mask].astype(str).to_numpy()
+    factor = keys.map(rules["factor"]).fillna(1.0).astype(float)
+    out["value_normalized"] = pd.to_numeric(out["value"], errors="coerce") * factor.to_numpy()
+    return out
 
 
 def coerce_excel_dates(values: pd.Series) -> pd.Series:
@@ -269,13 +500,32 @@ def _metadata_from_row(df: pd.DataFrame, row: int | None, max_left_col0: int, he
 def _find_meta_row(df: pd.DataFrame, max_left_col0: int, header: str, pair_index: int) -> int | None:
     header_norm = _norm(header)
     rows = _candidate_meta_rows(df, max_left_col0)
+    return _find_meta_row_from_candidates(df, max_left_col0, header_norm, pair_index, rows)
+
+
+def _find_meta_row_from_candidates(
+    df: pd.DataFrame,
+    max_left_col0: int,
+    header_norm: str,
+    pair_index: int,
+    rows: list[int],
+    left_norm_values: dict[int, list[str]] | None = None,
+) -> int | None:
     if header_norm:
         for row in rows:
-            left_values = [_norm(df.iat[row, col]) for col in range(max(0, max_left_col0))]
+            left_values = (
+                left_norm_values[row]
+                if left_norm_values is not None and row in left_norm_values
+                else [_norm(df.iat[row, col]) for col in range(max(0, max_left_col0))]
+            )
             if header_norm in left_values:
                 return row
         for row in rows:
-            left_values = [_norm(df.iat[row, col]) for col in range(max(0, max_left_col0))]
+            left_values = (
+                left_norm_values[row]
+                if left_norm_values is not None and row in left_norm_values
+                else [_norm(df.iat[row, col]) for col in range(max(0, max_left_col0))]
+            )
             if any(header_norm and (header_norm in value or value in header_norm) for value in left_values if value):
                 return row
     if pair_index < len(rows):
@@ -393,24 +643,8 @@ def _infer_contract_month(display_name: str, ric: str) -> str:
 
 
 def _infer_unit(sheet: str, display_name: str, ric: str) -> tuple[str, str]:
-    text = f"{display_name} {ric} {sheet}".lower()
-    if ric.startswith("RB") or "rbob" in text:
-        return "USD/gal", "USD/bbl"
-    if ric.startswith("HO") or re.search(r"\bho\b", text):
-        return "USD/gal", "USD/bbl"
-    if sheet == "Crude" or any(token in text for token in ["wti", "brent", "dubai", "oman"]):
-        return "USD/bbl", "USD/bbl"
-    if sheet in {"Crk", "Margin"} or "crack" in text:
-        return "USD/bbl", "USD/bbl"
-    if sheet in {"原油", "成品油(国内汽柴表)", "成品油(国外汽柴表)", "Freight"}:
-        return "USD/bbl", "USD/bbl"
-    if sheet in {"Diesel", "Nap", "Propane", "Fuel oil"}:
-        return "USD/mt", "USD/mt"
-    if sheet == "Gasoline":
-        return "USD/bbl", "USD/bbl"
-    if sheet == "LNG":
-        return "USD/MMBtu", "USD/MMBtu"
-    return "", ""
+    rule = _unit_rule(sheet, display_name, ric)
+    return str(rule["unit_native"]), str(rule["unit_normalized"])
 
 
 def _series_to_records(
@@ -441,9 +675,11 @@ def _series_to_records(
         unit_native = catalog_override.get("unit_native") or unit_native
         unit_normalized = catalog_override.get("unit_normalized") or unit_normalized
 
-    frame["value_normalized"] = frame["value"]
-    if unit_native == "USD/gal" and unit_normalized == "USD/bbl":
-        frame["value_normalized"] = usd_per_gallon_to_usd_per_barrel(frame["value"])
+    unit_rule = _unit_rule(parsed.sheet, display_name, parsed.ric)
+    if unit_rule.get("unit_native"):
+        unit_native = str(unit_rule["unit_native"])
+        unit_normalized = str(unit_rule["unit_normalized"])
+    frame["value_normalized"] = frame["value"] * float(unit_rule.get("factor", 1.0))
 
     rows: list[dict[str, Any]] = []
     for row in frame.itertuples(index=False):
@@ -458,17 +694,125 @@ def _series_to_records(
                 "product": product,
                 "region": region,
                 "contract_month": contract_month,
+                "term_type": "continuous",
+                "calendar_month": "",
                 "unit_native": unit_native,
                 "unit_normalized": unit_normalized,
                 "ric": parsed.ric,
                 "is_derived": bool(parsed.is_derived),
                 "source": parsed.source,
                 "value_normalized": float(row.value_normalized),
+                "unit_conversion": str(unit_rule.get("conversion", "")),
+                "unit_source": str(unit_rule.get("source", "")),
                 "name_native": parsed.name_native,
                 "short_name": parsed.short_name,
             }
         )
     return rows
+
+
+def _contract_month_number(value: Any) -> int | None:
+    match = re.search(r"(\d{1,2})", str(value or ""))
+    if not match:
+        return None
+    number = int(match.group(1))
+    return number if 1 <= number <= 12 else None
+
+
+def _derive_calendar_month_records(continuous: pd.DataFrame) -> list[dict[str, Any]]:
+    if continuous.empty:
+        return []
+    frame = continuous[continuous.get("term_type", "continuous").eq("continuous")].copy()
+    if frame.empty:
+        return []
+    frame["month_num"] = frame["contract_month"].map(_contract_month_number)
+    frame = frame[frame["month_num"].between(1, 12, inclusive="both")]
+    frame = frame[frame["sheet"].isin(set(CALENDAR_OUTPUT_BY_SOURCE))]
+    if frame.empty:
+        return []
+
+    catalog = (
+        frame.sort_values(["sheet", "product", "region", "contract_month", "display_name"])
+        .drop_duplicates("series_id")
+        .copy()
+    )
+    catalog["ricbase"] = catalog["ric"].map(_continuous_ric_base)
+    catalog = catalog[catalog["ricbase"].astype(bool)]
+
+    records: list[dict[str, Any]] = []
+    for (source_sheet, ricbase), group in catalog.groupby(["sheet", "ricbase"], dropna=False):
+        month_catalog = group.drop_duplicates("month_num")
+        if set(month_catalog["month_num"].astype(int)) != set(range(1, 13)):
+            continue
+        month_catalog = month_catalog.sort_values("month_num")
+        series_ids = list(month_catalog["series_id"])
+        data = frame[frame["series_id"].isin(series_ids)].copy()
+        if data.empty:
+            continue
+        raw_wide = data.pivot_table(index="date", columns="month_num", values="value", aggfunc="last").sort_index()
+        norm_wide = data.pivot_table(index="date", columns="month_num", values="value_normalized", aggfunc="last").sort_index()
+        if raw_wide.empty:
+            continue
+
+        meta = month_catalog[month_catalog["month_num"] == 1].iloc[0].to_dict()
+        base_label = _calendar_base_label(str(meta.get("display_name") or ""), str(ricbase))
+        calendar_sheet = CALENDAR_OUTPUT_BY_SOURCE.get(str(source_sheet), f"{source_sheet}_自然月")
+        calendar_sector = str(meta.get("sector") or _infer_sector(str(source_sheet), base_label, str(meta.get("ric") or "")))
+        calendar_product = str(meta.get("product") or _infer_product(base_label, str(meta.get("ric") or ""), str(source_sheet)))
+        calendar_region = str(meta.get("region") or _infer_region(base_label, str(meta.get("ric") or ""), str(source_sheet)))
+        unit_native = str(meta.get("unit_native") or "")
+        unit_normalized = str(meta.get("unit_normalized") or unit_native)
+        unit_conversion = str(meta.get("unit_conversion") or "")
+        unit_source = str(meta.get("unit_source") or "")
+
+        month_by_date = pd.Series(raw_wide.index.month, index=raw_wide.index)
+        for target_month in range(1, 13):
+            selected_contract = ((target_month - month_by_date) % 12) + 1
+            raw_values = pd.Series(np.nan, index=raw_wide.index, dtype=float)
+            norm_values = pd.Series(np.nan, index=raw_wide.index, dtype=float)
+            for contract_num in range(1, 13):
+                mask = selected_contract == contract_num
+                if contract_num in raw_wide.columns:
+                    raw_values.loc[mask] = raw_wide.loc[mask, contract_num]
+                if contract_num in norm_wide.columns:
+                    norm_values.loc[mask] = norm_wide.loc[mask, contract_num]
+            valid = raw_values.dropna()
+            if valid.empty:
+                continue
+
+            display_name = f"{base_label} {target_month}月"
+            ric = f"CAL_{ricbase}_{target_month:02d}"
+            series_id = _make_series_id(calendar_sheet, display_name, ric, target_month)
+            for date, value in valid.items():
+                normalized = norm_values.get(date, np.nan)
+                if pd.isna(normalized):
+                    normalized = value
+                records.append(
+                    {
+                        "date": pd.Timestamp(date).normalize(),
+                        "series_id": series_id,
+                        "display_name": display_name,
+                        "value": float(value),
+                        "sheet": calendar_sheet,
+                        "sector": calendar_sector,
+                        "product": calendar_product,
+                        "region": calendar_region,
+                        "contract_month": "",
+                        "term_type": "calendar",
+                        "calendar_month": int(target_month),
+                        "unit_native": unit_native,
+                        "unit_normalized": unit_normalized,
+                        "ric": ric,
+                        "is_derived": True,
+                        "source": "CalendarMonthFormula",
+                        "value_normalized": float(normalized),
+                        "unit_conversion": unit_conversion,
+                        "unit_source": unit_source,
+                        "name_native": display_name,
+                        "short_name": display_name,
+                    }
+                )
+    return records
 
 
 def _parse_rdp_sheet(sheet: str, df: pd.DataFrame, formula: tuple[int, int, str, str]) -> list[ParsedSeries]:
@@ -483,6 +827,11 @@ def _parse_rdp_sheet(sheet: str, df: pd.DataFrame, formula: tuple[int, int, str,
     parsed: list[ParsedSeries] = []
     invalid_streak = 0
     pair_index = 0
+    meta_rows = _candidate_meta_rows(df, first_date_col)
+    left_norm_values = {
+        row: [_norm(df.iat[row, col]) for col in range(max(0, first_date_col))]
+        for row in meta_rows
+    }
     for date_col in range(first_date_col, df.shape[1] - 1, 2):
         value_col = date_col + 1
         date_series = df.iloc[first_data_row:, date_col]
@@ -497,7 +846,14 @@ def _parse_rdp_sheet(sheet: str, df: pd.DataFrame, formula: tuple[int, int, str,
             continue
         invalid_streak = 0
         header = _first_non_empty_above(df, first_data_row, value_col)
-        meta_row = _find_meta_row(df, first_date_col, header, pair_index)
+        meta_row = _find_meta_row_from_candidates(
+            df,
+            first_date_col,
+            _norm(header),
+            pair_index,
+            meta_rows,
+            left_norm_values,
+        )
         meta = _metadata_from_row(df, meta_row, first_date_col, header)
         display_name = header or meta["short_name"] or meta["name_native"] or meta["ric"] or f"{sheet} {pair_index + 1}"
         parsed.append(
@@ -591,9 +947,18 @@ def _load_catalog_overrides(catalog_path: str | Path | None) -> dict[str, dict[s
 
 
 def _apply_catalog_overrides(df: pd.DataFrame, catalog_path: str | Path | None) -> pd.DataFrame:
+    if not df.empty:
+        if "term_type" not in df.columns:
+            df = df.copy()
+            df["term_type"] = "continuous"
+        if "calendar_month" not in df.columns:
+            df = df.copy()
+            df["calendar_month"] = ""
     overrides = _load_catalog_overrides(catalog_path)
-    if not overrides or df.empty:
+    if df.empty:
         return df
+    if not overrides:
+        return _apply_unit_rule_metadata(df)
     out = df.copy()
     editable_cols = [
         "display_name",
@@ -601,21 +966,68 @@ def _apply_catalog_overrides(df: pd.DataFrame, catalog_path: str | Path | None) 
         "product",
         "region",
         "contract_month",
+        "term_type",
+        "calendar_month",
         "unit_native",
         "unit_normalized",
+        "unit_conversion",
+        "unit_source",
         "ric",
     ]
-    for series_id, override in overrides.items():
-        mask = out["series_id"] == series_id
-        if not mask.any():
+    override_frame = pd.DataFrame.from_dict(overrides, orient="index")
+    if override_frame.empty:
+        return out
+    override_frame.index = override_frame.index.astype(str)
+    series_ids = out["series_id"].astype(str)
+    for col in editable_cols:
+        if col not in out.columns or col not in override_frame.columns:
             continue
-        for col in editable_cols:
-            value = override.get(col)
-            if value not in (None, "") and col in out.columns:
-                out.loc[mask, col] = value
-    out["value_normalized"] = out["value"]
-    mask = (out["unit_native"] == "USD/gal") & (out["unit_normalized"] == "USD/bbl")
-    out.loc[mask, "value_normalized"] = usd_per_gallon_to_usd_per_barrel(out.loc[mask, "value"])
+        mapped = series_ids.map(override_frame[col])
+        mask = mapped.notna() & mapped.ne("")
+        if mask.any():
+            out.loc[mask, col] = mapped[mask].astype(str).to_numpy()
+    return _apply_unit_rule_metadata(out)
+
+
+def _ensure_runtime_columns(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
+    out = df
+    missing_defaults = {
+        "term_type": "continuous",
+        "calendar_month": "",
+    }
+    for col, default in missing_defaults.items():
+        if col not in out.columns:
+            out = out.copy()
+            out[col] = default
+    return _apply_unit_rule_metadata(out)
+
+
+def _cache_write_frame(df: pd.DataFrame) -> pd.DataFrame:
+    string_cols = [
+        "series_id",
+        "display_name",
+        "sheet",
+        "sector",
+        "product",
+        "region",
+        "contract_month",
+        "term_type",
+        "calendar_month",
+        "unit_native",
+        "unit_normalized",
+        "unit_conversion",
+        "unit_source",
+        "ric",
+        "source",
+        "name_native",
+        "short_name",
+    ]
+    out = df.copy()
+    for col in string_cols:
+        if col in out.columns:
+            out[col] = out[col].fillna("").astype(str)
     return out
 
 
@@ -638,14 +1050,24 @@ def generate_catalog(df: pd.DataFrame, catalog_path: str | Path | None = None, o
             "product": row.get("product", ""),
             "region": row.get("region", ""),
             "contract_month": row.get("contract_month", ""),
+            "term_type": row.get("term_type", ""),
+            "calendar_month": row.get("calendar_month", ""),
             "unit_native": row.get("unit_native", ""),
             "unit_normalized": row.get("unit_normalized", ""),
+            "unit_conversion": row.get("unit_conversion", ""),
+            "unit_source": row.get("unit_source", ""),
             "ric": row.get("ric", ""),
             "is_derived": bool(row.get("is_derived", False)),
             "source": row.get("source", ""),
         }
         if not overwrite and series_id in existing:
             base.update({key: value for key, value in existing[series_id].items() if value not in (None, "")})
+        unit_rule = _unit_rule(str(base.get("sheet", "")), str(base.get("display_name", "")), str(base.get("ric", "")))
+        if unit_rule.get("unit_native"):
+            base["unit_native"] = unit_rule["unit_native"]
+            base["unit_normalized"] = unit_rule["unit_normalized"]
+            base["unit_conversion"] = unit_rule["conversion"]
+            base["unit_source"] = unit_rule["source"]
         rows.append(base)
     with path.open("w", encoding="utf-8") as f:
         yaml.safe_dump({"series": rows}, f, allow_unicode=True, sort_keys=False, width=120)
@@ -699,6 +1121,9 @@ def parse_nap_workbook(
         return pd.DataFrame(columns=STANDARD_COLUMNS + EXTRA_COLUMNS)
 
     out = pd.DataFrame(all_records)
+    calendar_records = _derive_calendar_month_records(out)
+    if calendar_records:
+        out = pd.concat([out, pd.DataFrame(calendar_records)], ignore_index=True)
     out = out.sort_values(["series_id", "date"]).drop_duplicates(["date", "series_id"], keep="last")
     out = out[STANDARD_COLUMNS + [col for col in EXTRA_COLUMNS if col in out.columns]]
 
@@ -710,12 +1135,13 @@ def parse_nap_workbook(
 
 def _write_cache(df: pd.DataFrame, cache_path: Path) -> None:
     cache_path.parent.mkdir(parents=True, exist_ok=True)
+    frame = _cache_write_frame(df)
     try:
-        df.to_parquet(cache_path, index=False)
+        frame.to_parquet(cache_path, index=False)
     except Exception as exc:
         fallback = cache_path.with_suffix(cache_path.suffix + ".pkl")
         logger.warning("Unable to write parquet cache (%s); wrote pickle fallback: %s", exc, fallback)
-        df.to_pickle(fallback)
+        frame.to_pickle(fallback)
 
 
 def _read_cache(cache_path: Path) -> pd.DataFrame | None:
@@ -745,7 +1171,10 @@ def load_nap_timeseries(
             fallback = cache.with_suffix(cache.suffix + ".pkl")
             cache_for_mtime = cache if cache.exists() else fallback
             if not workbook.exists() or cache_for_mtime.stat().st_mtime >= workbook.stat().st_mtime:
-                return _apply_catalog_overrides(cached, catalog)
+                cached = _ensure_runtime_columns(cached)
+                if catalog.exists() and catalog.stat().st_mtime > cache_for_mtime.stat().st_mtime:
+                    return _apply_catalog_overrides(cached, catalog)
+                return cached
 
     df = parse_nap_workbook(workbook, catalog_path=catalog, generate_catalog_file=True)
     _write_cache(df, cache)
@@ -763,8 +1192,12 @@ def series_catalog_frame(df: pd.DataFrame) -> pd.DataFrame:
         "product",
         "region",
         "contract_month",
+        "term_type",
+        "calendar_month",
         "unit_native",
         "unit_normalized",
+        "unit_conversion",
+        "unit_source",
         "ric",
         "is_derived",
         "source",

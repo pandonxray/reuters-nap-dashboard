@@ -393,8 +393,13 @@ def catalog_with_labels(df: pd.DataFrame) -> pd.DataFrame:
             row.get("sector"),
             row.get("product"),
             row.get("region"),
-            row.get("contract_month"),
         ]
+        if str(row.get("term_type", "continuous")) == "calendar":
+            month = row.get("calendar_month")
+            if pd.notna(month) and str(month).strip():
+                parts.append(f"{int(float(month))}月")
+        else:
+            parts.append(row.get("contract_month"))
         context = " / ".join(str(part) for part in parts if pd.notna(part) and str(part).strip())
         name = str(row.get("display_name") or row.get("series_id") or "").strip()
         ric = str(row.get("ric") or "").strip()
@@ -413,9 +418,15 @@ def display_lookup(catalog: pd.DataFrame) -> dict[str, str]:
         return {}
     names = []
     for _, row in catalog.iterrows():
+        term = str(row.get("term_type", "continuous"))
+        month_label = ""
+        if term == "calendar" and pd.notna(row.get("calendar_month")) and str(row.get("calendar_month")).strip():
+            month_label = f"{int(float(row.get('calendar_month')))}月"
+        else:
+            month_label = row.get("contract_month")
         parts = [
             row.get("display_name"),
-            row.get("contract_month"),
+            month_label,
             row.get("region"),
             row.get("ric"),
         ]
@@ -434,7 +445,14 @@ def structure_labels(catalog: pd.DataFrame, wide: pd.DataFrame) -> dict[str, str
     labels = {series_id: "flat/spot" for series_id in catalog.get("series_id", [])}
     if catalog.empty or wide.empty:
         return labels
-    contract_catalog = catalog[catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)].copy()
+    if "term_type" in catalog.columns:
+        calendar_ids = catalog[catalog["term_type"].astype(str).eq("calendar")]["series_id"].astype(str)
+        for series_id in calendar_ids:
+            labels[series_id] = "calendar"
+    contract_catalog = catalog[
+        catalog.get("term_type", pd.Series("continuous", index=catalog.index)).astype(str).ne("calendar")
+        & catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)
+    ].copy()
     if contract_catalog.empty:
         return labels
     for _, group in contract_catalog.groupby(["sector", "product", "region"], dropna=False):
@@ -478,6 +496,8 @@ def build_market_snapshot(df: pd.DataFrame) -> pd.DataFrame:
             "product": row_meta.get("product", ""),
             "region": row_meta.get("region", ""),
             "contract_month": row_meta.get("contract_month", ""),
+            "term_type": row_meta.get("term_type", "continuous"),
+            "calendar_month": row_meta.get("calendar_month", ""),
             "unit": row_meta.get("unit_normalized") or row_meta.get("unit_native", ""),
             "ric": row_meta.get("ric", ""),
             "latest_date": latest_date,
@@ -500,14 +520,38 @@ def build_market_snapshot(df: pd.DataFrame) -> pd.DataFrame:
     return out.sort_values(["sector_order", "sector", "product", "region", "contract_month", "display_name"]).drop(columns="sector_order")
 
 
+def _curve_axis_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
+    if catalog.empty:
+        return pd.DataFrame()
+    frame = catalog.copy()
+    term = frame.get("term_type", pd.Series("continuous", index=frame.index)).astype(str)
+    continuous = frame[term.ne("calendar") & frame["contract_month"].astype(str).str.match(r"^M\d+$", na=False)].copy()
+    if not continuous.empty:
+        continuous["month_num"] = continuous["contract_month"].str.extract(r"(\d+)").astype(int)
+        continuous["curve_label"] = continuous["contract_month"]
+        continuous["curve_mode"] = "continuous"
+        return continuous
+    calendar = frame[term.eq("calendar")].copy()
+    if calendar.empty or "calendar_month" not in calendar.columns:
+        return pd.DataFrame()
+    calendar["month_num"] = pd.to_numeric(calendar["calendar_month"], errors="coerce")
+    calendar = calendar[calendar["month_num"].between(1, 12, inclusive="both")].copy()
+    if calendar.empty:
+        return pd.DataFrame()
+    calendar["month_num"] = calendar["month_num"].astype(int)
+    calendar["curve_label"] = calendar["month_num"].map(lambda month: f"{month}月")
+    calendar["curve_mode"] = "calendar"
+    return calendar
+
+
 def available_curve_groups(catalog: pd.DataFrame) -> pd.DataFrame:
     if catalog.empty:
         return pd.DataFrame(columns=["sector", "product", "region", "count"])
-    curves = catalog[catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)].copy()
+    curves = _curve_axis_catalog(catalog)
     if curves.empty:
         return pd.DataFrame(columns=["sector", "product", "region", "count"])
     return (
-        curves.groupby(["sector", "product", "region"], dropna=False)
+        curves.groupby(["sector", "product", "region", "curve_mode"], dropna=False)
         .size()
         .reset_index(name="count")
         .sort_values(["sector", "product", "region"])
@@ -532,15 +576,14 @@ def build_forward_curve(
     catalog = catalog_with_labels(df)
     if catalog.empty:
         return pd.DataFrame()
-    curves = catalog[
-        (catalog["sector"] == sector)
-        & (catalog["product"] == product)
-        & (catalog["region"] == region)
-        & catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)
+    curves = _curve_axis_catalog(catalog)
+    curves = curves[
+        (curves["sector"] == sector)
+        & (curves["product"] == product)
+        & (curves["region"] == region)
     ].copy()
     if curves.empty:
         return pd.DataFrame()
-    curves["month_num"] = curves["contract_month"].str.extract(r"(\d+)").astype(int)
     curves = curves.sort_values("month_num")
     wide = long_to_wide(df[df["series_id"].isin(curves["series_id"])], normalized=normalized)
     if wide.empty:
@@ -554,8 +597,9 @@ def build_forward_curve(
         rows.append(
             {
                 "asof": selected_asof,
-                "contract_month": row["contract_month"],
+                "contract_month": row["curve_label"],
                 "month_num": int(row["month_num"]),
+                "curve_mode": row.get("curve_mode", "continuous"),
                 "series_id": row["series_id"],
                 "display_name": row["display_name"],
                 "value": value,
@@ -590,11 +634,16 @@ def build_curve_history(
 def forward_curve_spreads(curve: pd.DataFrame) -> dict[str, float]:
     if curve.empty:
         return {"M1-M2": np.nan, "M1-M3": np.nan, "M1-M6": np.nan}
-    values = curve.sort_values("month_num").drop_duplicates("contract_month").set_index("contract_month")["value"]
+    values = curve.sort_values("month_num").drop_duplicates("month_num").set_index("month_num")["value"]
+    prefix = "M" if str(curve.get("curve_mode", pd.Series(["continuous"])).iloc[0]) != "calendar" else ""
+    def _label(front: int, back: int) -> str:
+        if prefix:
+            return f"M{front}-M{back}"
+        return f"{front}月-{back}月"
     return {
-        "M1-M2": float(values.get("M1", np.nan) - values.get("M2", np.nan)),
-        "M1-M3": float(values.get("M1", np.nan) - values.get("M3", np.nan)),
-        "M1-M6": float(values.get("M1", np.nan) - values.get("M6", np.nan)),
+        _label(1, 2): float(values.get(1, np.nan) - values.get(2, np.nan)),
+        _label(1, 3): float(values.get(1, np.nan) - values.get(3, np.nan)),
+        _label(1, 6): float(values.get(1, np.nan) - values.get(6, np.nan)),
     }
 
 

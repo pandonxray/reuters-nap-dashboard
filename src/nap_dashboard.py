@@ -26,6 +26,7 @@ if "xarray" not in sys.modules:
 
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit as st
 import yaml
 
@@ -125,6 +126,7 @@ PAGE_OPTIONS = {
     "季节性": "seasonality",
     "关系实验室": "relationship",
     "组合价差": "combos",
+    "周报出图": "weekly",
     "远期曲线": "curve",
     "波动 / 风险": "risk",
     "运费 / 套利": "freight",
@@ -150,6 +152,7 @@ STRUCTURE_CN = {
     "contango": "远期升水",
     "flat": "平水",
     "flat/spot": "现货 / 无曲线",
+    "calendar": "自然月",
 }
 
 SNAPSHOT_CN = {
@@ -160,7 +163,20 @@ SNAPSHOT_CN = {
 }
 
 NAPHTHA_BBLS_PER_MT = 8.9
+EBOB_BBLS_PER_MT = 8.33
+GASOIL_BBLS_PER_MT = 7.45
 CONTRACT_MONTHS = [f"M{idx}" for idx in range(1, 13)]
+CALENDAR_MONTHS = list(range(1, 13))
+PPT_WIDTH = 1600
+PPT_HEIGHT = 900
+TERM_MODE_OPTIONS = {
+    "连续月 C1-C12": "continuous",
+    "自然月 1-12月": "calendar",
+}
+TERM_MODE_CN = {
+    "continuous": "连续月",
+    "calendar": "自然月",
+}
 
 
 def _plot_template() -> str:
@@ -366,6 +382,44 @@ def _inject_theme(theme: str) -> None:
             font-size: 0.9rem;
         }}
         .nap-note strong {{ color: var(--nap-text); }}
+        .nap-report-strip {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0.75rem 0 0.85rem;
+            padding: 0.85rem 1rem;
+            background: var(--nap-panel);
+            border: 1px solid var(--nap-line);
+            border-radius: 8px;
+        }}
+        .nap-report-strip strong {{
+            display: block;
+            color: var(--nap-text);
+            font-size: 1rem;
+            line-height: 1.2;
+        }}
+        .nap-report-strip em {{
+            display: block;
+            color: var(--nap-muted);
+            font-size: 0.82rem;
+            font-style: normal;
+            margin-top: 0.2rem;
+        }}
+        .nap-report-meta {{
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }}
+        .nap-report-meta span {{
+            border: 1px solid var(--nap-line);
+            border-radius: 999px;
+            padding: 0.18rem 0.55rem;
+            background: var(--nap-panel-soft);
+            color: var(--nap-muted);
+            font-size: 0.75rem;
+        }}
         div[data-testid="stPlotlyChart"] {{
             border: 1px solid var(--nap-line);
             border-radius: 8px;
@@ -438,6 +492,28 @@ def _download_csv(label: str, df: pd.DataFrame, filename: str, key: str) -> None
     if df is None or df.empty:
         return
     st.download_button(label, df.to_csv(index=True).encode("utf-8-sig"), file_name=filename, mime="text/csv", key=key)
+
+
+def _plotly_config(filename: str) -> dict[str, object]:
+    return {
+        "displaylogo": False,
+        "toImageButtonOptions": {
+            "format": "png",
+            "filename": filename,
+            "height": PPT_HEIGHT,
+            "width": PPT_WIDTH,
+            "scale": 2,
+        },
+    }
+
+
+def _download_figure_png(label: str, fig: go.Figure, filename: str, key: str) -> None:
+    try:
+        png = fig.to_image(format="png", width=PPT_WIDTH, height=PPT_HEIGHT, scale=2)
+    except Exception as exc:
+        st.caption(f"{label} 暂不可用：{exc}")
+        return
+    st.download_button(label, png, file_name=filename, mime="image/png", key=key)
 
 
 def _safe_dataframe(df: pd.DataFrame, *, hide_index: bool = False, use_container_width: bool = True) -> None:
@@ -564,9 +640,22 @@ def _lookup_explanation(explanations: dict, series_id: str, meta: pd.Series | di
     return defaults.get(product) or defaults.get(sector) or defaults.get("generic", {})
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _cached_load(workbook_path: str, cache_path: str, catalog_path: str, refresh_token: int, workbook_signature: str) -> pd.DataFrame:
     return load_nap_timeseries(workbook_path, cache_path=cache_path, catalog_path=catalog_path, refresh=refresh_token > 0)
+
+
+def _filter_term_view(df: pd.DataFrame, term_mode: str, calendar_months: list[int] | None = None) -> pd.DataFrame:
+    if df.empty or "term_type" not in df.columns:
+        return df
+    if term_mode == "calendar":
+        out = df[df["term_type"].astype(str).eq("calendar")]
+        if calendar_months and "calendar_month" in out.columns:
+            selected = {int(month) for month in calendar_months}
+            months = pd.to_numeric(out["calendar_month"], errors="coerce")
+            out = out[months.isin(selected)]
+        return out
+    return df[~df["term_type"].astype(str).eq("calendar")]
 
 
 def _sidebar() -> dict[str, object]:
@@ -578,9 +667,22 @@ def _sidebar() -> dict[str, object]:
     )
     theme = st.sidebar.radio("主题", ["浅色", "深色"], horizontal=True)
     st.session_state["nap_theme"] = theme
-    uploaded = st.sidebar.file_uploader("拖入 Nap.xlsx", type=["xlsx"], help="把 Reuters 导出的 Nap.xlsx 拖到这里后，系统会按文件内容重新生成专属缓存，不会复用旧 workbook 的缓存。")
+    view_label = st.sidebar.radio("查看模式", list(TERM_MODE_OPTIONS), horizontal=False)
+    term_mode = TERM_MODE_OPTIONS[view_label]
+    selected_calendar_months = CALENDAR_MONTHS
+    if term_mode == "calendar":
+        selected_calendar_months = st.sidebar.multiselect(
+            "自然月组合",
+            CALENDAR_MONTHS,
+            default=CALENDAR_MONTHS,
+            format_func=lambda month: f"{month}月",
+            help="自然月模式只显示已勾选月份；可用于只看旺季、淡季或自定义月份组合。",
+        )
+        if not selected_calendar_months:
+            selected_calendar_months = CALENDAR_MONTHS
+    uploaded = st.sidebar.file_uploader("拖入 NAP Excel", type=["xlsx"], help="可拖入 Nap.xlsx 或 Nap_calendar_month_live_formula.xlsx；系统会按文件内容生成专属缓存，不会复用旧 workbook 的缓存。")
     uploaded_path, uploaded_digest = _persist_uploaded_workbook(uploaded)
-    workbook_input = st.sidebar.text_input("或输入 Nap.xlsx 路径", value=str(DEFAULT_NAP_WORKBOOK))
+    workbook_input = st.sidebar.text_input("或输入 NAP Excel 路径", value=str(DEFAULT_NAP_WORKBOOK))
     workbook_path = uploaded_path or workbook_input
     signature = _workbook_signature(workbook_path)
     cache_path = _signature_cache_path(default_cache_path(), signature)
@@ -600,6 +702,8 @@ def _sidebar() -> dict[str, object]:
     return {
         "page": PAGE_OPTIONS[page],
         "theme": theme,
+        "term_mode": term_mode,
+        "calendar_months": selected_calendar_months,
         "workbook_path": workbook_path,
         "cache_path": cache_path,
         "catalog_path": catalog_path,
@@ -687,6 +791,23 @@ def _series_selector(
     region = st.selectbox("地区", _option_values(frame, "region"), key=f"{key}_region")
     frame = _filter_by_option(frame, "region", region)
 
+    if "term_type" in frame.columns and frame["term_type"].astype(str).eq("calendar").all() and "calendar_month" in frame.columns:
+        month_values = sorted(
+            {
+                int(value)
+                for value in pd.to_numeric(frame["calendar_month"], errors="coerce").dropna().astype(int)
+                if 1 <= int(value) <= 12
+            }
+        )
+        if len(month_values) > 1:
+            selected_month = st.selectbox(
+                "自然月",
+                month_values,
+                format_func=lambda month: f"{month}月",
+                key=f"{key}_calendar_month",
+            )
+            frame = frame[pd.to_numeric(frame["calendar_month"], errors="coerce").eq(selected_month)]
+
     contract_options = _option_values(frame, "contract_month")
     if len(contract_options) > 2:
         contract = st.selectbox("合约", contract_options, key=f"{key}_contract")
@@ -722,6 +843,8 @@ def _find_series_id(
     product: str | None = None,
     region: str | None = None,
     contract_month: str | None = None,
+    term_type: str | None = None,
+    calendar_month: int | str | None = None,
     ric_prefix: str | None = None,
     contains: list[str] | None = None,
 ) -> str | None:
@@ -731,10 +854,15 @@ def _find_series_id(
         "product": product,
         "region": region,
         "contract_month": contract_month,
+        "term_type": term_type,
+        "calendar_month": calendar_month,
     }.items():
         if value is None or column not in frame.columns:
             continue
-        frame = frame[frame[column].astype(str).str.casefold() == str(value).casefold()]
+        if column == "calendar_month":
+            frame = frame[pd.to_numeric(frame[column], errors="coerce").eq(int(value))]
+        else:
+            frame = frame[frame[column].astype(str).str.casefold() == str(value).casefold()]
     if ric_prefix:
         frame = frame[frame["ric"].astype(str).str.upper().str.startswith(ric_prefix.upper(), na=False)]
     if contains:
@@ -770,19 +898,19 @@ def _spread_series(
 
 def _combo_definitions() -> dict[str, dict[str, object]]:
     return {
-        "新加坡92汽油纸货 - MOPJ（石脑油折 USD/bbl）": {
+        "新加坡92汽油纸货 - MOPJ（统一 USD/bbl）": {
             "left": {"sector": "Gasoline", "product": "新加坡92汽油", "region": "新加坡"},
             "right": {"sector": "Naphtha", "product": "日本CFR石脑油", "region": "日本/东北亚"},
-            "right_divisor": NAPHTHA_BBLS_PER_MT,
             "unit": "USD/bbl",
-            "description": "新加坡92RON汽油纸货逐月减 MOPJ CFR Japan 石脑油逐月；MOPJ 从 USD/mt 除以 8.9 换算为 USD/bbl。",
+            "formula": "Singapore 92 - MOPJ/8.90",
+            "description": "新加坡92RON汽油纸货逐月减 MOPJ CFR Japan 石脑油逐月。计算统一成 USD/bbl：新加坡92原始为 USD/bbl；MOPJ 原始为 USD/mt，先除以 8.90 转为 USD/bbl；公式 = Singapore 92 - MOPJ/8.90。",
         },
-        "欧洲EBOB汽油纸货 - NWE CIF石脑油（石脑油折 USD/bbl）": {
+        "欧洲EBOB汽油纸货 - NWE CIF石脑油（统一 USD/bbl）": {
             "left": {"sector": "Gasoline", "product": "欧洲EBOB汽油", "region": "欧洲"},
             "right": {"sector": "Naphtha", "product": "NWE CIF石脑油", "region": "西北欧"},
-            "right_divisor": NAPHTHA_BBLS_PER_MT,
             "unit": "USD/bbl",
-            "description": "欧洲 EBOB 汽油纸货逐月减 Naphtha CIF NWE outright swap 逐月；NWE 石脑油从 USD/mt 除以 8.9 换算为 USD/bbl。",
+            "formula": "EBOB/8.33 - NWE/8.90",
+            "description": "欧洲 EBOB 汽油纸货逐月减 Naphtha CIF NWE outright swap 逐月。计算统一成 USD/bbl：EBOB 原始为 USD/mt，先除以 8.33 转为 USD/bbl；NWE 石脑油原始为 USD/mt，先除以 8.90 转为 USD/bbl；公式 = EBOB/8.33 - NWE/8.90。",
         },
     }
 
@@ -793,9 +921,16 @@ def _monthly_combo_frame(wide: pd.DataFrame, catalog: pd.DataFrame, combo: dict[
     left_selector = dict(combo["left"])  # type: ignore[index]
     right_selector = dict(combo["right"])  # type: ignore[index]
     right_divisor = float(combo.get("right_divisor", 1.0))
-    for month in CONTRACT_MONTHS:
-        left_id = _find_series_id(catalog, contract_month=month, **left_selector)
-        right_id = _find_series_id(catalog, contract_month=month, **right_selector)
+    is_calendar = "term_type" in catalog.columns and catalog["term_type"].astype(str).eq("calendar").all()
+    month_axis: list[tuple[str, dict[str, object]]] = []
+    if is_calendar:
+        available = sorted(pd.to_numeric(catalog.get("calendar_month"), errors="coerce").dropna().astype(int).unique())
+        month_axis = [(f"{month}月", {"term_type": "calendar", "calendar_month": int(month)}) for month in available if 1 <= int(month) <= 12]
+    else:
+        month_axis = [(month, {"contract_month": month}) for month in CONTRACT_MONTHS]
+    for month, month_selector in month_axis:
+        left_id = _find_series_id(catalog, **month_selector, **left_selector)
+        right_id = _find_series_id(catalog, **month_selector, **right_selector)
         spread = _spread_series(wide, left_id, right_id, right_divisor=right_divisor)
         if spread.empty:
             rows.append({"合约": month, "价差": np.nan, "最新日期": pd.NaT, "左腿": left_id or "-", "右腿": right_id or "-"})
@@ -854,12 +989,197 @@ def _apply_fig_layout(fig: go.Figure, title: str | None = None) -> go.Figure:
     return fig
 
 
+def _weekly_year_color(year: int, latest_year: int) -> str:
+    fixed = {
+        latest_year: "#c75b5b",
+        latest_year - 1: "#55a173",
+        latest_year - 2: "#8064a2",
+        latest_year - 3: "#e39c35",
+        latest_year - 4: "#2f8ca3",
+    }
+    return fixed.get(int(year), _seasonal_year_palette()[int(year) % len(_seasonal_year_palette())])
+
+
+def _add_weekly_seasonality_panel(
+    fig: go.Figure,
+    series: pd.Series,
+    *,
+    row: int,
+    col: int,
+    years: int,
+    show_legend: bool,
+    y_title: str,
+    zero_line: bool = False,
+) -> None:
+    cleaned = series.dropna()
+    if cleaned.empty:
+        fig.add_annotation(
+            text="无可用数据",
+            x=0.5,
+            y=0.5,
+            xref=f"x{(row - 1) * 2 + col} domain",
+            yref=f"y{(row - 1) * 2 + col} domain",
+            showarrow=False,
+            font=dict(color="#7b8790", size=13),
+        )
+        return
+    cleaned = remove_feb29(cleaned.to_frame("value"))["value"]
+    matrix = seasonal_matrix(cleaned, years=years)
+    band = seasonal_percentile_band(cleaned, years=max(years, 10))
+    range_values: list[float] = []
+    x_axis = pd.to_datetime("2001-" + matrix.index.astype(str), errors="coerce") if not matrix.empty else pd.Series(dtype="datetime64[ns]")
+    if not band.empty:
+        range_values.extend(pd.concat([band["lower"], band["median"], band["upper"]]).dropna().astype(float).tolist())
+        band_x = pd.to_datetime("2001-" + band["doy"].astype(str), errors="coerce")
+        fig.add_trace(
+            go.Scatter(
+                x=band_x,
+                y=band["upper"],
+                line=dict(width=0),
+                showlegend=False,
+                legendgroup="band",
+                hoverinfo="skip",
+            ),
+            row=row,
+            col=col,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=band_x,
+                y=band["lower"],
+                fill="tonexty",
+                fillcolor="rgba(47,125,140,0.15)",
+                line=dict(width=0),
+                name="10%-90% 分位带",
+                legendgroup="band",
+                legendrank=90,
+                showlegend=show_legend,
+                hoverinfo="skip",
+            ),
+            row=row,
+            col=col,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=band_x,
+                y=band["median"],
+                name="历史中位数",
+                legendgroup="median",
+                legendrank=80,
+                showlegend=show_legend,
+                mode="lines",
+                line=dict(color="#c28b38", width=1.5),
+            ),
+            row=row,
+            col=col,
+        )
+    if not matrix.empty:
+        range_values.extend(matrix.stack().dropna().astype(float).tolist())
+        latest_year = int(max(matrix.columns))
+        for year in sorted(matrix.columns):
+            year_int = int(year)
+            is_latest = year_int == latest_year
+            fig.add_trace(
+                go.Scatter(
+                    x=x_axis,
+                    y=matrix[year],
+                    name=str(year_int),
+                    legendgroup=str(year_int),
+                    legendrank=10 + max(0, latest_year - year_int),
+                    showlegend=show_legend,
+                    mode="lines",
+                    line=dict(color=_weekly_year_color(year_int, latest_year), width=3.0 if is_latest else 1.7),
+                    opacity=1.0 if is_latest else 0.95,
+                ),
+                row=row,
+                col=col,
+            )
+    if zero_line:
+        fig.add_hline(y=0, line_dash="dot", line_color="#8c9aa3", line_width=1, row=row, col=col)
+    fig.update_xaxes(title_text="月份", tickformat="%m月", dtick="M1", showgrid=True, gridcolor="#e5ebef", row=row, col=col)
+    fig.update_yaxes(title_text=y_title, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=row, col=col)
+    if range_values:
+        sample = pd.Series(range_values, dtype=float).replace([np.inf, -np.inf], np.nan).dropna()
+        if not sample.empty:
+            low = float(sample.quantile(0.01))
+            high = float(sample.quantile(0.99))
+            if not matrix.empty:
+                visible_years = matrix.stack().dropna().astype(float)
+                if not visible_years.empty:
+                    low = min(low, float(visible_years.min()))
+                    high = max(high, float(visible_years.max()))
+            if zero_line:
+                low = min(low, 0.0)
+                high = max(high, 0.0)
+            if high > low:
+                pad = (high - low) * 0.08
+                fig.update_yaxes(range=[low - pad, high + pad], row=row, col=col)
+
+
+def _weekly_seasonality_figure(
+    panels: list[dict[str, object]],
+    *,
+    title: str,
+    years: int = 5,
+    y_title: str = "数值",
+    zero_line: bool = False,
+) -> go.Figure:
+    slots = panels[:4]
+    while len(slots) < 4:
+        slots.append({"title": "", "series": pd.Series(dtype=float)})
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=[str(item.get("title", "")) for item in slots],
+        horizontal_spacing=0.075,
+        vertical_spacing=0.15,
+    )
+    for idx, item in enumerate(slots):
+        row = idx // 2 + 1
+        col = idx % 2 + 1
+        series = item.get("series")
+        _add_weekly_seasonality_panel(
+            fig,
+            series if isinstance(series, pd.Series) else pd.Series(dtype=float),
+            row=row,
+            col=col,
+            years=years,
+            show_legend=idx == 0,
+            y_title=y_title,
+            zero_line=zero_line,
+        )
+    fig.update_layout(
+        template="plotly_white",
+        title=dict(text=""),
+        width=PPT_WIDTH,
+        height=PPT_HEIGHT,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        margin=dict(l=54, r=36, t=92, b=54),
+        legend=dict(orientation="h", yanchor="bottom", y=1.035, xanchor="right", x=1, font=dict(size=12)),
+        hovermode="x unified",
+        font=dict(family="Microsoft YaHei, SimHei, Segoe UI, sans-serif", size=12, color="#27323a"),
+    )
+    fig.update_annotations(font=dict(size=15, color="#1f2a33"))
+    return fig
+
+
+def _weekly_chart(fig: go.Figure, filename: str, key: str) -> None:
+    st.plotly_chart(fig, use_container_width=True, config=_plotly_config(filename))
+    _download_figure_png("下载 PNG", fig, f"{filename}.png", key)
+
+
 def _render_market_card(row: pd.Series) -> str:
     chg = row.get("chg_1d")
     chg5 = row.get("chg_5d")
     chg20 = row.get("chg_20d")
     display = escape(str(row.get("display_name", "")))
-    meta = escape(f"{row.get('product', '')} / {row.get('region', '')} / {row.get('ric', '')}")
+    month_meta = ""
+    if str(row.get("term_type", "continuous")) == "calendar" and pd.notna(row.get("calendar_month")) and str(row.get("calendar_month")).strip():
+        month_meta = f" / {int(float(row.get('calendar_month')))}月"
+    elif str(row.get("contract_month", "")).strip():
+        month_meta = f" / {row.get('contract_month')}"
+    meta = escape(f"{row.get('product', '')} / {row.get('region', '')}{month_meta} / {row.get('ric', '')}")
     unit = escape(str(row.get("unit", "")))
     structure = escape(STRUCTURE_CN.get(str(row.get("structure", "-")), str(row.get("structure", "-"))))
     sector = escape(_sector_label(row.get("sector", "")))
@@ -913,7 +1233,11 @@ def render_market_map(df: pd.DataFrame) -> None:
         group = filtered[filtered["sector"] == sector]
         if group.empty:
             continue
-        group = group.sort_values(["contract_month", "product", "display_name"]).head(max_cards)
+        group = group.copy()
+        group["sort_month"] = pd.to_numeric(group.get("calendar_month", ""), errors="coerce").fillna(
+            group["contract_month"].map(_contract_number)
+        )
+        group = group.sort_values(["product", "region", "sort_month", "contract_month", "display_name"]).head(max_cards)
         st.markdown(
             f'<div class="nap-section-title"><span>{_sector_label(sector)}</span><span>{len(group)} 条序列</span></div>',
             unsafe_allow_html=True,
@@ -954,6 +1278,8 @@ def render_series_detail(df: pd.DataFrame, explanations: dict) -> None:
         explanation = _lookup_explanation(explanations, series_id, meta)
         unit_native = meta.get("unit_native", "-")
         unit_normalized = meta.get("unit_normalized") or unit_native
+        unit_conversion = meta.get("unit_conversion") or "未设置额外换算；使用原始报价口径。"
+        unit_source = meta.get("unit_source") or "当前 workbook/catalog 推断。"
         if unit_native != unit_normalized:
             unit_note = f"原始单位为 {unit_native}，看板计算和跨品种比较使用 {unit_normalized}。"
         else:
@@ -969,7 +1295,7 @@ def render_series_detail(df: pd.DataFrame, explanations: dict) -> None:
               <strong>主要驱动</strong><br>{explanation.get("drivers", "原油、区域供需、炼厂开工、运费和宏观风险偏好。")}<br><br>
               <strong>相关价差</strong><br>{explanation.get("related_spreads", "可与同区域月差、跨区价差、裂解价差、炼厂利润和运费调整套利一起观察。")}<br><br>
               <strong>交易用途</strong><br>{explanation.get("trading_use", "跟踪绝对价格、结构、裂解价差和相对价值。")}<br><br>
-              <strong>数据口径</strong><br>{unit_note}<br><br>
+              <strong>数据口径</strong><br>{unit_note}<br>换算公式: {unit_conversion}<br>单位依据: {unit_source}<br><br>
               <strong>注意事项</strong><br>{explanation.get("notes", "跨市场比较价差前请先确认单位、合约月份、报价地点和是否为评估价/期货连续合约。")}
             </div>
             """,
@@ -1181,12 +1507,14 @@ def _render_monthly_combo(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
     combos = _combo_definitions()
     selected_name = st.selectbox("组合", list(combos), key="combo_spread_name")
     combo = combos[selected_name]
+    formula = str(combo.get("formula", "两腿统一单位后相减"))
     st.markdown(
         f"""
         <div class="nap-note">
         <strong>逐月组合口径</strong><br>
         {combo["description"]}<br>
-        石脑油换算采用 <strong>1 mt = {NAPHTHA_BBLS_PER_MT:.2f} bbl</strong>，所以 USD/mt 转 USD/bbl 使用 <strong>除以 {NAPHTHA_BBLS_PER_MT:.2f}</strong>。
+        <strong>本图公式：</strong>{formula}<br>
+        <strong>单位规则：</strong>RBOB/HO 为 USD/gal × 42；EBOB 为 USD/mt ÷ {EBOB_BBLS_PER_MT:.2f}；MOPJ/NWE 石脑油为 USD/mt ÷ {NAPHTHA_BBLS_PER_MT:.2f}；LSGO 为 USD/mt ÷ {GASOIL_BBLS_PER_MT:.2f}。
         </div>
         """,
         unsafe_allow_html=True,
@@ -1201,8 +1529,9 @@ def _render_monthly_combo(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
     curve = curve.sort_values("month_num")
 
     metric_cols = st.columns(4)
-    latest_m1 = curve[curve["合约"] == "M1"]["价差"].dropna()
-    metric_cols[0].metric("M1 最新价差", _fmt(latest_m1.iloc[-1] if not latest_m1.empty else np.nan))
+    front_label = "1月" if "1月" in set(curve["合约"].astype(str)) else "M1"
+    latest_front = curve[curve["合约"].astype(str) == front_label]["价差"].dropna()
+    metric_cols[0].metric(f"{front_label} 最新价差", _fmt(latest_front.iloc[-1] if not latest_front.empty else np.nan))
     metric_cols[1].metric("最强月份", str(curve.dropna(subset=["价差"]).sort_values("价差", ascending=False).iloc[0]["合约"]))
     metric_cols[2].metric("最弱月份", str(curve.dropna(subset=["价差"]).sort_values("价差", ascending=True).iloc[0]["合约"]))
     metric_cols[3].metric("可用月份", f"{curve['价差'].notna().sum()}/12")
@@ -1233,11 +1562,12 @@ def _render_monthly_combo(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
 
 
 def _render_combo_m1_seasonality(selected_name: str, series_by_month: dict[str, pd.Series], unit: str) -> None:
-    spread = series_by_month.get("M1")
+    front_key = "1月" if "1月" in series_by_month else "M1"
+    spread = series_by_month.get(front_key)
     if spread is None or spread.dropna().empty:
         return
 
-    st.markdown("#### M1 季节图")
+    st.markdown(f"#### {front_key} 季节图")
     controls = st.columns([0.7, 0.7, 1.8])
     years = controls[0].selectbox("历史窗口", [5, 10], index=1, format_func=lambda value: f"过去 {value} 年", key="combo_m1_season_years")
     remove_leap = controls[1].checkbox("剔除 2月29日", value=True, key="combo_m1_season_remove_feb29")
@@ -1247,7 +1577,7 @@ def _render_combo_m1_seasonality(selected_name: str, series_by_month: dict[str, 
         seasonal_series = remove_feb29(seasonal_series.to_frame("value"))["value"]
     matrix = seasonal_matrix(seasonal_series, years=int(years))
     if matrix.empty:
-        st.info("M1 价差暂时没有足够历史数据生成季节图。")
+        st.info(f"{front_key} 价差暂时没有足够历史数据生成季节图。")
         return
 
     x_axis = pd.to_datetime("2001-" + matrix.index.astype(str), errors="coerce")
@@ -1269,9 +1599,9 @@ def _render_combo_m1_seasonality(selected_name: str, series_by_month: dict[str, 
     fig.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
     fig.update_xaxes(title="月份", tickformat="%m月", dtick="M1")
     fig.update_yaxes(title=unit)
-    _apply_fig_layout(fig, f"{selected_name} M1 季节图")
+    _apply_fig_layout(fig, f"{selected_name} {front_key} 季节图")
     st.plotly_chart(fig, use_container_width=True)
-    _download_csv("下载 M1 季节图 CSV", matrix, "nap_combo_m1_seasonality.csv", "download_combo_m1_seasonality")
+    _download_csv(f"下载 {front_key} 季节图 CSV", matrix, "nap_combo_front_seasonality.csv", "download_combo_m1_seasonality")
 
 
 def _render_mopj_driver_chart(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
@@ -1334,12 +1664,19 @@ def _render_time_spread_lab(catalog: pd.DataFrame, wide: pd.DataFrame) -> None:
         (catalog["sector"] == sector)
         & (catalog["product"] == product)
         & (catalog["region"] == region)
-        & catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)
     ].copy()
-    group_catalog["month_num"] = group_catalog["contract_month"].map(_contract_number)
+    is_calendar = "term_type" in group_catalog.columns and group_catalog["term_type"].astype(str).eq("calendar").all()
+    if is_calendar:
+        group_catalog["month_num"] = pd.to_numeric(group_catalog["calendar_month"], errors="coerce")
+        group_catalog = group_catalog[group_catalog["month_num"].between(1, 12, inclusive="both")].copy()
+        group_catalog["month_label"] = group_catalog["month_num"].astype(int).map(lambda month: f"{month}月")
+    else:
+        group_catalog = group_catalog[group_catalog["contract_month"].astype(str).str.match(r"^M\d+$", na=False)].copy()
+        group_catalog["month_num"] = group_catalog["contract_month"].map(_contract_number)
+        group_catalog["month_label"] = group_catalog["contract_month"]
     group_catalog = group_catalog.sort_values("month_num")
-    month_ids = dict(zip(group_catalog["contract_month"], group_catalog["series_id"]))
-    pairs = [("M1", "M2"), ("M1", "M3"), ("M1", "M6"), ("M2", "M3")]
+    month_ids = dict(zip(group_catalog["month_label"], group_catalog["series_id"]))
+    pairs = [("1月", "2月"), ("1月", "3月"), ("1月", "6月"), ("2月", "3月")] if is_calendar else [("M1", "M2"), ("M1", "M3"), ("M1", "M6"), ("M2", "M3")]
     spreads: dict[str, pd.Series] = {}
     for front, back in pairs:
         series = _spread_series(wide, month_ids.get(front), month_ids.get(back))
@@ -1379,6 +1716,317 @@ def render_combo_spreads(df: pd.DataFrame) -> None:
         _render_mopj_driver_chart(catalog, wide)
     with tab_time:
         _render_time_spread_lab(catalog, wide)
+
+
+def _weekly_panel_from_selector(
+    catalog: pd.DataFrame,
+    wide: pd.DataFrame,
+    *,
+    title: str,
+    selector: dict[str, object],
+) -> dict[str, object]:
+    series_id = _find_series_id(catalog, **selector)
+    if not series_id:
+        return {"title": f"{title}（缺失）", "series": pd.Series(dtype=float)}
+    return {"title": title, "series": _series_from_wide(wide, series_id)}
+
+
+def _weekly_freight_panels(catalog: pd.DataFrame, wide: pd.DataFrame) -> list[dict[str, object]]:
+    presets = [
+        ("原油轮运费 / 美国湾-欧洲 | TD-CRP-MLF", {"sector": "Freight", "ric_prefix": "TD-CRP-MLF"}),
+        ("原油轮运费 / 地中海-新加坡 | TD-LPP-SIN", {"sector": "Freight", "ric_prefix": "TD-LPP-SIN"}),
+        ("成品油轮运费 / 新加坡-中国 | TC-SIN1-NGB", {"sector": "Freight", "ric_prefix": "TC-SIN1-NGB"}),
+        ("原油轮运费 / 中东-中国 | TD-RTA-NGB", {"sector": "Freight", "ric_prefix": "TD-RTA-NGB"}),
+    ]
+    return [_weekly_panel_from_selector(catalog, wide, title=title, selector=selector) for title, selector in presets]
+
+
+def _weekly_crack_panels(catalog: pd.DataFrame, wide: pd.DataFrame) -> list[dict[str, object]]:
+    presets = [
+        ("NWE石脑油裂解 M1 季节性走势", {"sector": "Cracks", "product": "NWE石脑油裂解", "contract_month": "M1"}),
+        ("MOPJ裂解 M1 季节性走势", {"sector": "Cracks", "product": "MOPJ裂解", "contract_month": "M1"}),
+        ("NWE石脑油裂解 M2 季节性走势", {"sector": "Cracks", "product": "NWE石脑油裂解", "contract_month": "M2"}),
+        ("MOPJ裂解 M2 季节性走势", {"sector": "Cracks", "product": "MOPJ裂解", "contract_month": "M2"}),
+    ]
+    return [_weekly_panel_from_selector(catalog, wide, title=title, selector=selector) for title, selector in presets]
+
+
+def _weekly_combo_figure(
+    selected_name: str,
+    series_by_month: dict[str, pd.Series],
+    curve: pd.DataFrame,
+    *,
+    unit: str,
+    front_key: str,
+) -> go.Figure:
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=[f"{selected_name} {front_key} 季节图", f"{selected_name} 当前逐月价差"],
+        horizontal_spacing=0.11,
+        column_widths=[0.62, 0.38],
+    )
+    _add_weekly_seasonality_panel(
+        fig,
+        series_by_month.get(front_key, pd.Series(dtype=float)),
+        row=1,
+        col=1,
+        years=5,
+        show_legend=True,
+        y_title=unit,
+        zero_line=True,
+    )
+    curve_plot = curve.dropna(subset=["价差"]).copy()
+    if not curve_plot.empty:
+        curve_plot["month_num"] = curve_plot["合约"].map(_contract_number)
+        curve_plot = curve_plot.sort_values("month_num")
+        fig.add_trace(
+            go.Scatter(
+                x=curve_plot["合约"],
+                y=curve_plot["价差"],
+                mode="lines+markers",
+                name="当前逐月价差",
+                showlegend=False,
+                line=dict(color="#6070ff", width=2.6),
+                marker=dict(size=7),
+            ),
+            row=1,
+            col=2,
+        )
+    fig.add_hline(y=0, line_dash="dot", line_color="#8c9aa3", line_width=1, row=1, col=2)
+    fig.update_xaxes(title_text="月份", tickformat="%m月", dtick="M1", showgrid=True, gridcolor="#e5ebef", row=1, col=1)
+    fig.update_xaxes(title_text="合约", showgrid=False, row=1, col=2)
+    fig.update_yaxes(title_text=unit, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=1, col=1)
+    fig.update_yaxes(title_text=unit, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=1, col=2)
+    fig.update_layout(
+        template="plotly_white",
+        title=dict(text=""),
+        width=PPT_WIDTH,
+        height=PPT_HEIGHT,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        margin=dict(l=54, r=36, t=92, b=54),
+        legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="right", x=1, font=dict(size=12)),
+        hovermode="x unified",
+        font=dict(family="Microsoft YaHei, SimHei, Segoe UI, sans-serif", size=12, color="#27323a"),
+    )
+    fig.update_annotations(font=dict(size=15, color="#1f2a33"))
+    return fig
+
+
+def _weekly_combo_short_name(name: str) -> str:
+    if "EBOB" in name or "欧洲" in name:
+        return "EBOB - NWE石脑油（折USD/bbl）"
+    if "新加坡" in name or "MOPJ" in name:
+        return "新加坡92汽油纸货 - MOPJ（折USD/bbl）"
+    return name
+
+
+def _front_month_key(series_by_month: dict[str, pd.Series], mode: str) -> str:
+    preferred = "1月" if mode == "calendar" else "M1"
+    if preferred in series_by_month:
+        return preferred
+    fallback = "M1" if "M1" in series_by_month else "1月"
+    if fallback in series_by_month:
+        return fallback
+    return next(iter(series_by_month), "")
+
+
+def _add_weekly_curve_panel(
+    fig: go.Figure,
+    curve: pd.DataFrame,
+    *,
+    row: int,
+    col: int,
+    unit: str,
+) -> None:
+    curve_plot = curve.dropna(subset=["价差"]).copy()
+    if curve_plot.empty:
+        fig.add_annotation(
+            text="无可用数据",
+            x=0.5,
+            y=0.5,
+            xref=f"x{(row - 1) * 2 + col} domain",
+            yref=f"y{(row - 1) * 2 + col} domain",
+            showarrow=False,
+            font=dict(color="#7b8790", size=13),
+        )
+        return
+    curve_plot["month_num"] = curve_plot["合约"].map(_contract_number)
+    curve_plot = curve_plot.sort_values("month_num")
+    fig.add_trace(
+        go.Scatter(
+            x=curve_plot["合约"],
+            y=curve_plot["价差"],
+            mode="lines+markers",
+            name="当前逐月价差",
+            showlegend=False,
+            line=dict(color="#6070ff", width=2.6),
+            marker=dict(size=7),
+        ),
+        row=row,
+        col=col,
+    )
+    fig.add_hline(y=0, line_dash="dot", line_color="#8c9aa3", line_width=1, row=row, col=col)
+    fig.update_xaxes(title_text="合约", showgrid=False, row=row, col=col)
+    fig.update_yaxes(title_text=unit, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=row, col=col)
+    low = float(min(curve_plot["价差"].min(), 0.0))
+    high = float(max(curve_plot["价差"].max(), 0.0))
+    if high > low:
+        pad = (high - low) * 0.08
+        fig.update_yaxes(range=[low - pad, high + pad], row=row, col=col)
+
+
+def _weekly_combo_quad_figure(items: list[dict[str, object]], *, unit: str) -> go.Figure:
+    slots = items[:2]
+    while len(slots) < 2:
+        slots.append({"short_name": "", "front_key": "", "series_by_month": {}, "curve": pd.DataFrame()})
+    subplot_titles: list[str] = []
+    for item in slots:
+        short_name = str(item.get("short_name", ""))
+        front_key = str(item.get("front_key", ""))
+        subplot_titles.extend([f"{short_name} {front_key} 季节图", f"{short_name} 当前逐月价差"])
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=subplot_titles,
+        horizontal_spacing=0.105,
+        vertical_spacing=0.16,
+        column_widths=[0.6, 0.4],
+    )
+    for idx, item in enumerate(slots):
+        row = idx + 1
+        series_by_month = item.get("series_by_month")
+        if not isinstance(series_by_month, dict):
+            series_by_month = {}
+        front_key = str(item.get("front_key", ""))
+        curve = item.get("curve")
+        _add_weekly_seasonality_panel(
+            fig,
+            series_by_month.get(front_key, pd.Series(dtype=float)),
+            row=row,
+            col=1,
+            years=5,
+            show_legend=idx == 0,
+            y_title=unit,
+            zero_line=True,
+        )
+        _add_weekly_curve_panel(
+            fig,
+            curve if isinstance(curve, pd.DataFrame) else pd.DataFrame(),
+            row=row,
+            col=2,
+            unit=unit,
+        )
+    fig.update_layout(
+        template="plotly_white",
+        title=dict(text=""),
+        width=PPT_WIDTH,
+        height=PPT_HEIGHT,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        margin=dict(l=54, r=36, t=92, b=54),
+        legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="right", x=1, font=dict(size=12)),
+        hovermode="x unified",
+        font=dict(family="Microsoft YaHei, SimHei, Segoe UI, sans-serif", size=12, color="#27323a"),
+    )
+    fig.update_annotations(font=dict(size=15, color="#1f2a33"))
+    return fig
+
+
+def _render_weekly_freight(df: pd.DataFrame) -> None:
+    catalog = catalog_with_labels(df)
+    wide = long_to_wide(df, normalized=True)
+    fig = _weekly_seasonality_figure(
+        _weekly_freight_panels(catalog, wide),
+        title="运费路线季节性走势",
+        years=5,
+        y_title="USD/bbl",
+        zero_line=False,
+    )
+    _weekly_chart(fig, "weekly_freight_seasonality", "weekly_freight_png")
+
+
+def _render_weekly_cracks(df: pd.DataFrame) -> None:
+    catalog = catalog_with_labels(df)
+    wide = long_to_wide(df, normalized=True)
+    fig = _weekly_seasonality_figure(
+        _weekly_crack_panels(catalog, wide),
+        title="石脑油裂解价差季节性走势",
+        years=5,
+        y_title="USD/bbl",
+        zero_line=True,
+    )
+    _weekly_chart(fig, "weekly_naphtha_cracks", "weekly_cracks_png")
+
+
+def _render_weekly_combo(df: pd.DataFrame) -> None:
+    mode_label = st.radio("组合口径", list(TERM_MODE_OPTIONS), horizontal=True, key="weekly_combo_mode")
+    combo_mode = TERM_MODE_OPTIONS[mode_label]
+    st.caption(
+        f"单位统一：新加坡92为 USD/bbl；MOPJ/NWE 石脑油为 USD/mt ÷ {NAPHTHA_BBLS_PER_MT:.2f}；"
+        f"EBOB 为 USD/mt ÷ {EBOB_BBLS_PER_MT:.2f}。周报四宫格分别使用 "
+        "Singapore 92 - MOPJ/8.90 和 EBOB/8.33 - NWE/8.90。"
+    )
+    combo_df = _filter_term_view(df, combo_mode, CALENDAR_MONTHS)
+    catalog = catalog_with_labels(combo_df)
+    wide = long_to_wide(combo_df, normalized=True)
+    combos = _combo_definitions()
+    items: list[dict[str, object]] = []
+    csv_frames: dict[str, pd.DataFrame] = {}
+    missing: list[str] = []
+    for name, combo in combos.items():
+        curve, series_by_month = _monthly_combo_frame(wide, catalog, combo)
+        short_name = _weekly_combo_short_name(name)
+        if curve.empty or not series_by_month:
+            missing.append(short_name)
+            continue
+        front_key = _front_month_key(series_by_month, combo_mode)
+        items.append(
+            {
+                "short_name": short_name,
+                "front_key": front_key,
+                "series_by_month": series_by_month,
+                "curve": curve,
+            }
+        )
+        csv_frames[short_name] = pd.DataFrame(series_by_month).sort_index()
+    if missing:
+        st.warning("以下组合缺少可出图数据：" + "；".join(missing))
+    if not items:
+        st.warning("当前组合缺少可出图的数据。")
+        return
+    fig = _weekly_combo_quad_figure(items, unit="USD/bbl")
+    _weekly_chart(fig, "weekly_gasoline_naphtha_spread", "weekly_combo_png")
+    if csv_frames:
+        _download_csv("下载组合数据 CSV", pd.concat(csv_frames, axis=1), "weekly_gasoline_naphtha_spread.csv", "weekly_combo_csv")
+
+
+def render_weekly_report(df: pd.DataFrame) -> None:
+    st.markdown(
+        """
+        <div class="nap-report-strip">
+          <div>
+            <strong>周报出图</strong>
+            <em>固定白底 16:9 版式，适合直接下载 PNG 后放入 PPT；图右上角相机按钮也可单独导出。</em>
+          </div>
+          <div class="nap-report-meta">
+            <span>1600×900</span>
+            <span>白底</span>
+            <span>周报模板</span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    continuous_df = _filter_term_view(df, "continuous", CALENDAR_MONTHS)
+    tab_freight, tab_cracks, tab_combo = st.tabs(["运费季节性四宫格", "石脑油裂解四宫格", "汽油-石脑油价差"])
+    with tab_freight:
+        _render_weekly_freight(continuous_df)
+    with tab_cracks:
+        _render_weekly_cracks(continuous_df)
+    with tab_combo:
+        _render_weekly_combo(df)
 
 
 def render_forward_curve(df: pd.DataFrame) -> None:
@@ -1592,7 +2240,9 @@ def render_glossary(df: pd.DataFrame, explanations: dict) -> None:
             {
                 "中文解释": exp.get("zh_name") or row["display_name"],
                 "英文名": exp.get("english_name") or row["display_name"],
-                "单位": row.get("unit_normalized") or row.get("unit_native"),
+                "原始单位": row.get("unit_native"),
+                "计算单位": row.get("unit_normalized") or row.get("unit_native"),
+                "换算说明": row.get("unit_conversion", ""),
                 "Reuters RIC": row.get("ric"),
                 "板块": _sector_label(row.get("sector")),
                 "品种": row.get("product"),
@@ -1614,7 +2264,7 @@ def run_nap_dashboard() -> None:
     controls = _sidebar()
     _inject_theme(str(controls["theme"]))
     try:
-        df = _cached_load(
+        raw_df = _cached_load(
             str(controls["workbook_path"]),
             str(controls["cache_path"]),
             str(controls["catalog_path"]),
@@ -1626,9 +2276,18 @@ def run_nap_dashboard() -> None:
         logger.exception("Failed to load NAP workbook")
         return
 
+    page = str(controls["page"])
+    df = _filter_term_view(
+        raw_df,
+        str(controls.get("term_mode", "continuous")),
+        list(controls.get("calendar_months", CALENDAR_MONTHS)),  # type: ignore[arg-type]
+    )
+    if df.empty:
+        st.warning("当前查看模式下没有可用数据，请切换连续月/自然月模式，或重新解析当前 Excel。")
+        return
+
     _render_topbar(df, str(controls["workbook_path"]))
     explanations = _load_yaml(default_explanations_path())
-    page = str(controls["page"])
     if page == "market":
         render_market_map(df)
     elif page == "detail":
@@ -1639,6 +2298,8 @@ def run_nap_dashboard() -> None:
         render_relationship_lab(df)
     elif page == "combos":
         render_combo_spreads(df)
+    elif page == "weekly":
+        render_weekly_report(raw_df)
     elif page == "curve":
         render_forward_curve(df)
     elif page == "risk":

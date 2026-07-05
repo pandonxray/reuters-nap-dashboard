@@ -67,6 +67,22 @@ def test_usd_gal_series_keep_raw_and_normalized_values(nap_frame: pd.DataFrame):
     assert sample["value_normalized"] == pytest.approx(sample["value"] * 42)
 
 
+def test_metric_ton_products_normalize_to_barrels_when_used_in_spreads(nap_frame: pd.DataFrame):
+    ebob = nap_frame[nap_frame["ric"].astype(str).str.startswith("EBOBNWEMc1", na=False)]
+    nwe_nap = nap_frame[nap_frame["ric"].astype(str).str.startswith("NAPCNWEAMc1", na=False)]
+    assert not ebob.empty
+    assert not nwe_nap.empty
+
+    ebob_sample = ebob.iloc[-1]
+    nwe_sample = nwe_nap.iloc[-1]
+    assert ebob_sample["unit_native"] == "USD/mt"
+    assert ebob_sample["unit_normalized"] == "USD/bbl"
+    assert ebob_sample["value_normalized"] == pytest.approx(ebob_sample["value"] / 8.33)
+    assert nwe_sample["unit_native"] == "USD/mt"
+    assert nwe_sample["unit_normalized"] == "USD/bbl"
+    assert nwe_sample["value_normalized"] == pytest.approx(nwe_sample["value"] / 8.9)
+
+
 def test_foreign_product_vlookup_panel_is_not_loaded_as_raw_reuters_series(nap_frame: pd.DataFrame):
     foreign = nap_frame[nap_frame["sheet"] == "成品油(国外汽柴表)"]
     assert foreign["series_id"].nunique() == 5

@@ -1,7 +1,8 @@
 ﻿pandas>=2.1
-numpy>=1.26,<2
+numpy>=2.0,<3
 streamlit>=1.35
 plotly>=5.20
+kaleido>=1.0
 pyyaml>=6.0
 openpyxl>=3.1
 pytest>=8.0

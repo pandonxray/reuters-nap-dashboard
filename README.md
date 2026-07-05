@@ -9,13 +9,20 @@ pip install -r requirements.txt
 streamlit run src/nap_dashboard.py
 ```
 
+本机快捷方式会调用 `start_nap_dashboard.ps1`，脚本会优先使用项目内 `.venv`。这样可以避免全局 Anaconda 依赖版本变化影响看板；如果 `.venv` 不存在，脚本才会回退到系统里的 Streamlit。
+
 默认数据源：
 
 ```text
-C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap.xlsx
+C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_live_formula.xlsx
 ```
 
-看板左侧支持直接拖入新的 `Nap.xlsx`，也可以输入本机完整路径。页面会按“路径 + 文件大小 + 修改时间”生成独立缓存；同名 Excel 更新后会自动进入新缓存，不会误用旧 parquet 或 pickle。点击 `重新解析当前 Excel` 可以强制刷新。
+看板左侧支持直接拖入新的 `Nap.xlsx` 或 `Nap_calendar_month_live_formula.xlsx`，也可以输入本机完整路径。页面会按“路径 + 文件大小 + 修改时间”生成独立缓存；同名 Excel 更新后会自动进入新缓存，不会误用旧 parquet 或 pickle。点击 `重新解析当前 Excel` 可以强制刷新。
+
+侧边栏提供两种查看模式：
+
+- `连续月 C1-C12`：沿用 Reuters 原始连续月序列，适合看 M1-M2、远期曲线和传统近远月结构。
+- `自然月 1-12月`：使用 C1-C12 按交易日月份反算出的自然月序列，适合比较 1月、2月等固定自然月。自然月模式下可以勾选任意月份组合，比如只看 3-5月旺季或 9-12月窗口。
 
 `Nap` sheet 新增的 `Naphtha CIF NWE Outright Swap Monthly Continuation 1-12` 会自动归入 `Naphtha / NWE CIF石脑油 / 西北欧`；`Naphtha CIF NWE Swap Assessments Crack Spread Month Continuation 1-12` 会自动归入 `Cracks / NWE石脑油裂解 / 西北欧`。
 
@@ -25,8 +32,11 @@ C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap.xlsx
 
 ```text
 date, series_id, display_name, value, sheet, sector, product, region,
-contract_month, unit_native, unit_normalized, ric, is_derived, source
+contract_month, term_type, calendar_month, unit_native, unit_normalized,
+ric, is_derived, source
 ```
+
+其中 `term_type=continuous` 表示原始 C1-C12 连续月；`term_type=calendar` 表示看板按公式逻辑从连续月反算出的 1-12 月自然月序列。自然月序列不依赖 Excel 公式缓存，即使 Excel 公式页没有保存计算结果，看板也会用原始 C1-C12 数据重新计算。
 
 默认缓存基础路径：
 
@@ -34,7 +44,7 @@ contract_month, unit_native, unit_normalized, ric, is_derived, source
 data/processed/nap_timeseries.parquet
 ```
 
-如果当前环境无法写 parquet，会自动写入同目录 `.pkl` fallback。手动刷新：
+缓存会按 workbook 签名写入独立 parquet；缓存命中时只读已处理好的长表，Excel 文件更新或点击页面左侧 `重新解析当前 Excel` 时才会重新扫描 workbook。若当前环境无法写 parquet，会自动写入同目录 `.pkl` fallback。手动刷新：
 
 ```powershell
 python -m src.nap_adapter --refresh
@@ -87,13 +97,23 @@ config/nap_formula_registry.yaml
 - `MOPJ 驱动对比`：把 MOPJ 升贴水、MOPJ 裂解和 Dated Brent/Brent 代理序列放到同一张图里，默认用 250D z-score 便于比较节奏。
 - `月差分析`：按板块、品种、地区选择 M1-Mn 曲线，展示 M1-M2、M1-M3、M1-M6、M2-M3 等月差。
 
-石脑油从 `USD/mt` 换算成 `USD/bbl` 时使用 `1 metric tonne = 8.90 barrels`，因此公式为：
+单位统一规则：
+
+| 代码/品种 | Reuters 原始单位 | 看板计算单位 | 换算 | 主要用途 |
+| --- | --- | --- | --- | --- |
+| RBOB、Heating Oil / HO | USD/gal | USD/bbl | `value * 42` | RBOB-WTI、HO-WTI 裂解/价差 |
+| Singapore 92 汽油纸货 | USD/bbl | USD/bbl | 不换算 | Singapore 92 - MOPJ |
+| MOPJ / Japan CFR Naphtha | USD/mt | USD/bbl | `value / 8.90` | Singapore 92 - MOPJ |
+| Naphtha CIF NWE outright | USD/mt | USD/bbl | `value / 8.90` | EBOB - NWE 石脑油 |
+| EBOB NWE 汽油纸货 | USD/mt | USD/bbl | `value / 8.33` | EBOB - NWE 石脑油 |
+| LSGO / Low Sulphur Gasoil | USD/mt | USD/bbl | `value / 7.45` | LSGO-Brent |
+
+原始 `value` 永远保留 Reuters 拉取值；跨品种价差、裂解和周报图默认使用 `value_normalized`。涉及桶吨换算的价差会在页面说明里标出公式，例如：
 
 ```text
-USD/bbl = USD/mt / 8.9
+Singapore 92 - MOPJ/8.90
+EBOB/8.33 - NWE Naphtha/8.90
 ```
-
-这个换算用于 MOPJ 和 NWE CIF 石脑油对汽油纸货的逐月组合价差。原始 `value` 仍按 Reuters 拉取值保留，组合图使用换算后的腿计算。
 
 ## 验证
 
@@ -101,4 +121,4 @@ USD/bbl = USD/mt / 8.9
 pytest -q
 ```
 
-当前本地 workbook 可识别 545 条序列，其中 Crude 160 条、Crk 120 条、Nap 64 条，并检查 `(date, series_id)` 无重复。
+当前公式 workbook 可识别 938 条序列，其中连续月 578 条、自然月 360 条，并检查 `(date, series_id)` 无重复。

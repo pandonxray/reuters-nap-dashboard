@@ -3,7 +3,9 @@ $ErrorActionPreference = "Stop"
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Port = 8522
 $Url = "http://localhost:$Port"
-$Streamlit = "D:\Anacoda\Scripts\streamlit.exe"
+$VenvStreamlit = Join-Path $ProjectDir ".venv\Scripts\streamlit.exe"
+$FallbackStreamlit = "D:\Anacoda\Scripts\streamlit.exe"
+$Streamlit = $VenvStreamlit
 $OutputDir = Join-Path $ProjectDir "outputs"
 $StdoutLog = Join-Path $OutputDir "nap_streamlit.out.log"
 $StderrLog = Join-Path $OutputDir "nap_streamlit.err.log"
@@ -44,19 +46,23 @@ try {
     }
 
     if (-not (Test-Path -LiteralPath $Streamlit)) {
+        $Streamlit = $FallbackStreamlit
+    }
+
+    if (-not (Test-Path -LiteralPath $Streamlit)) {
         $cmd = Get-Command streamlit -ErrorAction SilentlyContinue
         if ($cmd) {
             $Streamlit = $cmd.Source
         } else {
-            Show-LauncherMessage "Streamlit was not found: $Streamlit`nPlease check the Anaconda/Streamlit installation."
+            Show-LauncherMessage "Streamlit was not found: $VenvStreamlit or $FallbackStreamlit`nPlease check the project environment or Anaconda/Streamlit installation."
             exit 1
         }
     }
 
-    Write-LauncherLog "Starting Streamlit from $ProjectDir on port $Port."
+    Write-LauncherLog "Starting Streamlit from $ProjectDir on port $Port using $Streamlit."
     Start-Process `
         -FilePath $Streamlit `
-        -ArgumentList @("run", "src\nap_dashboard.py", "--server.port", "$Port", "--server.headless", "true", "--browser.gatherUsageStats", "false") `
+        -ArgumentList @("run", "src\nap_dashboard.py", "--server.port", "$Port", "--server.headless", "true", "--browser.gatherUsageStats", "false", "--server.fileWatcherType", "none", "--server.runOnSave", "false") `
         -WorkingDirectory $ProjectDir `
         -RedirectStandardOutput $StdoutLog `
         -RedirectStandardError $StderrLog `

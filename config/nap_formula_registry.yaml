@@ -1,88 +1,88 @@
 formulas:
-  - name: RBOB - WTI
-    description: NYMEX RBOB M1 normalized to USD/bbl minus WTI M1.
-    legs:
-      - weight: 1
-        selector:
-          product: RBOB汽油
-          contract_month: M1
-      - weight: -1
-        selector:
-          product: WTI
-          contract_month: M1
-  - name: HO - WTI
-    description: NYMEX Heating Oil M1 normalized to USD/bbl minus WTI M1.
-    legs:
-      - weight: 1
-        selector:
-          product: NYMEX取暖油
-          contract_month: M1
-      - weight: -1
-        selector:
-          product: WTI
-          contract_month: M1
-  - name: LSGO - Brent
-    description: ICE low sulphur gasoil M1 minus Brent M1. Units are native-normalized where available.
-    legs:
-      - weight: 1
-        selector:
-          product: 欧洲低硫柴油/LSGO
-          contract_month: M1
-      - weight: -1
-        selector:
-          product: Brent
-          contract_month: M1
-  - name: Singapore 92R crack
-    description: Reuters Singapore 92RON crack front month.
-    legs:
-      - weight: 1
-        selector:
-          product: 新加坡92汽油裂解
-          contract_month: M1
-  - name: Hi-5 = VLSFO - HSFO
-    description: Singapore low sulphur fuel oil minus high sulphur fuel oil.
-    legs:
-      - weight: 1
-        selector:
-          product: 低硫燃料油/VLSFO
-          contract_month: M1
-      - weight: -1
-        selector:
-          product: 高硫燃料油/HSFO
-          contract_month: M1
-  - name: Refinery margin vs crude
-    description: Front-month refining margin against Brent front month.
-    legs:
-      - weight: 1
-        selector:
-          product: Cracking炼厂利润
-      - weight: -1
-        selector:
-          product: Brent
-          contract_month: M1
-  - name: 新加坡92汽油 - MOPJ bbl
-    description: 新加坡92RON汽油纸货M1减MOPJ M1，MOPJ按1mt=8.9bbl折为USD/bbl。
-    legs:
-      - weight: 1
-        selector:
-          product: 新加坡92汽油
-          region: 新加坡
-          contract_month: M1
-      - weight: -0.11235955056179775
-        selector:
-          product: 日本CFR石脑油
-          region: 日本/东北亚
-          contract_month: M1
-  - name: EBOB - NWE Nap bbl
-    description: 欧洲EBOB汽油纸货M1减NWE CIF石脑油M1，NWE石脑油按1mt=8.9bbl折为USD/bbl。
-    legs:
-      - weight: 1
-        selector:
-          product: 欧洲EBOB汽油
-          region: 欧洲
-          contract_month: M1
-      - weight: -0.11235955056179775
-        selector:
-          product: NWE CIF石脑油
-          region: 西北欧
-          contract_month: M1
+- name: RBOB - WTI
+  description: NYMEX RBOB M1 normalized to USD/bbl minus WTI M1.
+  legs:
+  - weight: 1
+    selector:
+      product: RBOB汽油
+      contract_month: M1
+  - weight: -1
+    selector:
+      product: WTI
+      contract_month: M1
+- name: HO - WTI
+  description: NYMEX Heating Oil M1 normalized to USD/bbl minus WTI M1.
+  legs:
+  - weight: 1
+    selector:
+      product: NYMEX取暖油
+      contract_month: M1
+  - weight: -1
+    selector:
+      product: WTI
+      contract_month: M1
+- name: LSGO - Brent
+  description: ICE low sulphur gasoil M1 minus Brent M1. Units are native-normalized where available.
+  legs:
+  - weight: 1
+    selector:
+      product: 欧洲低硫柴油/LSGO
+      contract_month: M1
+  - weight: -1
+    selector:
+      product: Brent
+      contract_month: M1
+- name: Singapore 92R crack
+  description: Reuters Singapore 92RON crack front month.
+  legs:
+  - weight: 1
+    selector:
+      product: 新加坡92汽油裂解
+      contract_month: M1
+- name: Hi-5 = VLSFO - HSFO
+  description: Singapore low sulphur fuel oil minus high sulphur fuel oil.
+  legs:
+  - weight: 1
+    selector:
+      product: 低硫燃料油/VLSFO
+      contract_month: M1
+  - weight: -1
+    selector:
+      product: 高硫燃料油/HSFO
+      contract_month: M1
+- name: Refinery margin vs crude
+  description: Front-month refining margin against Brent front month.
+  legs:
+  - weight: 1
+    selector:
+      product: Cracking炼厂利润
+  - weight: -1
+    selector:
+      product: Brent
+      contract_month: M1
+- name: 新加坡92汽油 - MOPJ bbl
+  description: 新加坡92RON汽油纸货M1减MOPJ M1。数据层先统一成USD/bbl：新加坡92为USD/bbl；MOPJ为USD/mt ÷ 8.90。公式层只做同单位相减。
+  legs:
+  - weight: 1
+    selector:
+      product: 新加坡92汽油
+      region: 新加坡
+      contract_month: M1
+  - weight: -1
+    selector:
+      product: 日本CFR石脑油
+      region: 日本/东北亚
+      contract_month: M1
+- name: EBOB - NWE Nap bbl
+  description: 欧洲EBOB汽油纸货M1减NWE CIF石脑油M1。数据层先统一成USD/bbl：EBOB为USD/mt ÷ 8.33；NWE石脑油为USD/mt ÷ 8.90。公式层只做同单位相减。
+  legs:
+  - weight: 1
+    selector:
+      product: 欧洲EBOB汽油
+      region: 欧洲
+      contract_month: M1
+  - weight: -1
+    selector:
+      product: NWE CIF石脑油
+      region: 西北欧
+      contract_month: M1
