@@ -14,10 +14,10 @@ streamlit run src/nap_dashboard.py
 默认数据源：
 
 ```text
-C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_live_formula.xlsx
+C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_ultralight_formula.xlsx
 ```
 
-看板左侧支持直接拖入新的 `Nap.xlsx` 或 `Nap_calendar_month_live_formula.xlsx`，也可以输入本机完整路径。页面会按“路径 + 文件大小 + 修改时间”生成独立缓存；同名 Excel 更新后会自动进入新缓存，不会误用旧 parquet 或 pickle。点击 `重新解析当前 Excel` 可以强制刷新。
+看板左侧支持直接拖入新的 `Nap.xlsx` 或 `Nap_calendar_month_ultralight_formula.xlsx`，也可以输入本机完整路径。页面会按“路径 + 文件大小 + 修改时间”生成独立缓存；同名 Excel 更新后会自动进入新缓存，不会误用旧 parquet 或 pickle。点击 `重新解析当前 Excel` 可以强制刷新。
 
 侧边栏提供两种查看模式：
 

@@ -6,6 +6,8 @@ import pytest
 from src.nap_adapter import (
     DEFAULT_NAP_WORKBOOK,
     coerce_excel_dates,
+    coerce_excel_numeric,
+    load_nap_timeseries,
     parse_nap_workbook,
     usd_per_gallon_to_usd_per_barrel,
 )
@@ -30,6 +32,13 @@ def nap_frame() -> pd.DataFrame:
 def test_excel_serial_date_uses_1899_12_30_origin():
     parsed = coerce_excel_dates(pd.Series([1, 2, 46000]))
     assert parsed.iloc[2] == pd.Timestamp("2025-12-09")
+
+
+def test_excel_date_formatted_negative_number_is_recovered():
+    values = pd.Series([pd.Timestamp("1899-12-23 12:00:00"), pd.Timestamp("2026-07-10")])
+    parsed = coerce_excel_numeric(values)
+    assert parsed.iloc[0] == pytest.approx(-6.5)
+    assert pd.isna(parsed.iloc[1])
 
 
 def test_usd_per_gallon_to_usd_per_barrel_conversion():
@@ -67,6 +76,18 @@ def test_usd_gal_series_keep_raw_and_normalized_values(nap_frame: pd.DataFrame):
     assert sample["value_normalized"] == pytest.approx(sample["value"] * 42)
 
 
+def test_jet_quote_units_are_explicit_and_normalized(nap_frame: pd.DataFrame):
+    usg = nap_frame[nap_frame["ric"].astype(str).str.startswith("JETFUSGCMc1", na=False)]
+    nwe = nap_frame[nap_frame["ric"].astype(str).str.startswith("JETFCNWEMc1", na=False)]
+    singapore = nap_frame[nap_frame["ric"].astype(str).str.startswith("JETSGSWMc1", na=False)]
+    assert not usg.empty and not nwe.empty and not singapore.empty
+    assert usg.iloc[-1]["unit_native"] == "USC/gal"
+    assert usg.iloc[-1]["value_normalized"] == pytest.approx(usg.iloc[-1]["value"] * 0.42)
+    assert nwe.iloc[-1]["unit_native"] == "USD/mt"
+    assert nwe.iloc[-1]["value_normalized"] == pytest.approx(nwe.iloc[-1]["value"] / 7.88)
+    assert singapore.iloc[-1]["unit_native"] == "USD/bbl"
+
+
 def test_metric_ton_products_normalize_to_barrels_when_used_in_spreads(nap_frame: pd.DataFrame):
     ebob = nap_frame[nap_frame["ric"].astype(str).str.startswith("EBOBNWEMc1", na=False)]
     nwe_nap = nap_frame[nap_frame["ric"].astype(str).str.startswith("NAPCNWEAMc1", na=False)]
@@ -81,6 +102,13 @@ def test_metric_ton_products_normalize_to_barrels_when_used_in_spreads(nap_frame
     assert nwe_sample["unit_native"] == "USD/mt"
     assert nwe_sample["unit_normalized"] == "USD/bbl"
     assert nwe_sample["value_normalized"] == pytest.approx(nwe_sample["value"] / 8.9)
+
+
+def test_ric_contract_month_overrides_mislabeled_display_name(nap_frame: pd.DataFrame):
+    mopj_m2 = nap_frame[nap_frame["ric"].astype(str).eq("NACFRJPSWMc2")]
+    assert not mopj_m2.empty
+    assert set(mopj_m2["contract_month"].astype(str)) == {"M2"}
+    assert set(mopj_m2["display_name"].astype(str)) == {"日本CFR连2"}
 
 
 def test_foreign_product_vlookup_panel_is_not_loaded_as_raw_reuters_series(nap_frame: pd.DataFrame):
@@ -102,3 +130,17 @@ def test_nwe_naphtha_additions_are_classified_by_market_role(nap_frame: pd.DataF
     assert set(crack["sector"]) == {"Cracks"}
     assert set(crack["product"]) == {"NWE石脑油裂解"}
     assert set(crack["region"]) == {"西北欧"}
+
+
+def test_pickle_fallback_cache_migrates_to_parquet(tmp_path: Path, nap_frame: pd.DataFrame):
+    cache = tmp_path / "nap_timeseries.parquet"
+    fallback = cache.with_suffix(cache.suffix + ".pkl")
+    nap_frame.head(20).to_pickle(fallback)
+    loaded = load_nap_timeseries(
+        workbook_path=tmp_path / "missing.xlsx",
+        cache_path=cache,
+        catalog_path=tmp_path / "missing_catalog.yaml",
+    )
+    assert not loaded.empty
+    assert cache.exists()
+    assert not fallback.exists()

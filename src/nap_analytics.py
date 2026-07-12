@@ -376,7 +376,13 @@ def long_to_wide(df: pd.DataFrame, normalized: bool = True) -> pd.DataFrame:
     value_col = "value_normalized" if normalized and "value_normalized" in df.columns else "value"
     frame = df[["date", "series_id", value_col]].copy()
     frame["date"] = pd.to_datetime(frame["date"])
-    return frame.pivot_table(index="date", columns="series_id", values=value_col, aggfunc="last").sort_index()
+    return frame.pivot_table(
+        index="date",
+        columns="series_id",
+        values=value_col,
+        aggfunc="last",
+        observed=True,
+    ).sort_index()
 
 
 def catalog_with_labels(df: pd.DataFrame) -> pd.DataFrame:
@@ -474,11 +480,16 @@ def structure_labels(catalog: pd.DataFrame, wide: pd.DataFrame) -> dict[str, str
     return labels
 
 
-def build_market_snapshot(df: pd.DataFrame) -> pd.DataFrame:
+def build_market_snapshot(
+    df: pd.DataFrame,
+    *,
+    wide: pd.DataFrame | None = None,
+    catalog: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
-    wide = long_to_wide(df, normalized=True)
-    catalog = catalog_with_labels(df)
+    wide = long_to_wide(df, normalized=True) if wide is None else wide
+    catalog = catalog_with_labels(df) if catalog is None else catalog
     structure = structure_labels(catalog, wide)
     meta = catalog.set_index("series_id").to_dict(orient="index")
     rows: list[dict[str, object]] = []
@@ -520,16 +531,159 @@ def build_market_snapshot(df: pd.DataFrame) -> pd.DataFrame:
     return out.sort_values(["sector_order", "sector", "product", "region", "contract_month", "display_name"]).drop(columns="sector_order")
 
 
+_EXPLICIT_TIME_SPREAD_RE = re.compile(r"(?i)\bM\d+\s*[-/]\s*M\d+\b|月差")
+
+
+def _curve_family_key(row: pd.Series) -> str:
+    """Return a stable curve-family key shared by M1/M2/Mn contracts."""
+    ric = str(row.get("ric") or "").strip()
+    if ric:
+        stripped = re.sub(r"(?i)(?:mc|c)\d+$", "", ric)
+        if stripped != ric:
+            return stripped
+
+    name = str(row.get("display_name") or row.get("series_id") or "").strip()
+    name = re.sub(r"(?i)month(?:ly)?\s+continuation\s+\d+$", "", name)
+    name = re.sub(r"(?i)M\d+$", "", name)
+    name = re.sub(r"连\d+$", "", name)
+    return re.sub(r"\s+", " ", name).strip().lower()
+
+
+def _curve_quote_label(row: pd.Series) -> str:
+    name = str(row.get("display_name") or row.get("product") or "").strip()
+    name = re.sub(r"(?i)month(?:ly)?\s+continuation\s+\d+$", "", name)
+    name = re.sub(r"(?i)M\d+$", "", name)
+    name = re.sub(r"连\d+$", "", name)
+    return re.sub(r"\s+", " ", name).strip()
+
+
+def _latest_pair_spread(a: pd.Series, b: pd.Series) -> tuple[pd.Series, pd.DataFrame]:
+    aligned = pd.concat([a.rename("a"), b.rename("b")], axis=1).dropna()
+    if aligned.empty:
+        return pd.Series(dtype=float), aligned
+    return (aligned["a"] - aligned["b"]).rename("spread"), aligned
+
+
+def build_core_market_matrix(catalog: pd.DataFrame, wide: pd.DataFrame) -> pd.DataFrame:
+    """Build one decision-ready row per paired continuous curve family.
+
+    M1 and M2 are aligned on the same observation date. Structural statistics are
+    calculated from the aligned M1-M2 history, rather than inferred from a text label.
+    """
+    if catalog.empty or wide.empty:
+        return pd.DataFrame()
+
+    frame = catalog.copy()
+    term_type = frame.get("term_type", pd.Series("continuous", index=frame.index)).astype("string").fillna("continuous")
+    frame = frame[term_type.ne("calendar")].copy()
+    catalog_month = pd.to_numeric(
+        frame.get("contract_month", pd.Series("", index=frame.index)).astype("string").str.extract(r"^M(\d+)$")[0],
+        errors="coerce",
+    )
+    ric_month = pd.to_numeric(
+        frame.get("ric", pd.Series("", index=frame.index)).astype("string").str.extract(r"(?i)(?:mc|c)(\d+)$")[0],
+        errors="coerce",
+    )
+    frame["month_num"] = ric_month.fillna(catalog_month)
+    frame = frame[frame["month_num"].isin([1, 2, 3, 6])].copy()
+    if frame.empty:
+        return pd.DataFrame()
+
+    explicit_spread = frame["display_name"].astype("string").fillna("").str.contains(_EXPLICIT_TIME_SPREAD_RE, na=False)
+    frame = frame[~explicit_spread].copy()
+    frame["family_key"] = frame.apply(_curve_family_key, axis=1)
+    frame = frame[frame["family_key"].astype(str).str.len().gt(0)]
+
+    rows: list[dict[str, object]] = []
+    group_columns = ["sector", "product", "region", "family_key"]
+    for (sector, product, region, family_key), group in frame.groupby(group_columns, observed=True, dropna=False):
+        contracts = group.sort_values(["month_num", "display_name"]).drop_duplicates("month_num").set_index("month_num")
+        if 1 not in contracts.index or 2 not in contracts.index:
+            continue
+
+        m1_meta = contracts.loc[1]
+        m2_meta = contracts.loc[2]
+        m1_id = str(m1_meta["series_id"])
+        m2_id = str(m2_meta["series_id"])
+        if m1_id not in wide.columns or m2_id not in wide.columns:
+            continue
+
+        m1_series = wide[m1_id].dropna().astype(float)
+        m2_series = wide[m2_id].dropna().astype(float)
+        spread_12, aligned_12 = _latest_pair_spread(m1_series, m2_series)
+        if aligned_12.empty:
+            continue
+
+        latest_date = pd.Timestamp(aligned_12.index[-1])
+        m1_latest = float(aligned_12.iloc[-1]["a"])
+        m2_latest = float(aligned_12.iloc[-1]["b"])
+        spread_latest = float(spread_12.iloc[-1])
+        spread_change = float(spread_12.diff().iloc[-1]) if len(spread_12) > 1 else np.nan
+        m1_change = float(m1_series.diff().iloc[-1]) if len(m1_series) > 1 else np.nan
+
+        def spread_to(month_num: int) -> float:
+            if month_num not in contracts.index:
+                return np.nan
+            series_id = str(contracts.loc[month_num]["series_id"])
+            if series_id not in wide.columns:
+                return np.nan
+            spread, _ = _latest_pair_spread(m1_series, wide[series_id].dropna().astype(float))
+            return float(spread.iloc[-1]) if not spread.empty else np.nan
+
+        structure = "backwardation" if spread_latest > 0 else "contango" if spread_latest < 0 else "flat"
+        rows.append(
+            {
+                "sector": str(sector),
+                "product": str(product),
+                "region": str(region),
+                "quote": _curve_quote_label(m1_meta),
+                "family_key": str(family_key),
+                "m1": m1_latest,
+                "m2": m2_latest,
+                "m1_m2": spread_latest,
+                "m1_m3": spread_to(3),
+                "m1_m6": spread_to(6),
+                "m1_chg_1d": m1_change,
+                "spread_chg_1d": spread_change,
+                "spread_z_60d": zscore_of_value(spread_12, spread_latest, 60),
+                "spread_pct_250d": percentile_of_value(spread_12, spread_latest, 250),
+                "structure": structure,
+                "latest_date": latest_date,
+                "unit": m1_meta.get("unit_normalized") or m1_meta.get("unit_native", ""),
+                "m1_series_id": m1_id,
+                "m2_series_id": m2_id,
+            }
+        )
+
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return out
+    sector_order = {sector: idx for idx, sector in enumerate(MARKET_GROUPS)}
+    out["sector_order"] = out["sector"].map(sector_order).fillna(999)
+    return out.sort_values(["sector_order", "sector", "product", "region", "quote"]).drop(columns="sector_order").reset_index(drop=True)
+
+
 def _curve_axis_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     if catalog.empty:
         return pd.DataFrame()
     frame = catalog.copy()
-    term = frame.get("term_type", pd.Series("continuous", index=frame.index)).astype(str)
-    continuous = frame[term.ne("calendar") & frame["contract_month"].astype(str).str.match(r"^M\d+$", na=False)].copy()
+    term = frame.get("term_type", pd.Series("continuous", index=frame.index)).astype("string").fillna("continuous")
+    continuous = frame[term.ne("calendar") & frame["contract_month"].astype("string").str.match(r"^M\d+$", na=False)].copy()
     if not continuous.empty:
-        continuous["month_num"] = continuous["contract_month"].str.extract(r"(\d+)").astype(int)
-        continuous["curve_label"] = continuous["contract_month"]
+        explicit_spread = continuous["display_name"].astype("string").fillna("").str.contains(_EXPLICIT_TIME_SPREAD_RE, na=False)
+        continuous = continuous[~explicit_spread].copy()
+        catalog_month = pd.to_numeric(continuous["contract_month"].astype("string").str.extract(r"^M(\d+)$")[0], errors="coerce")
+        ric_month = pd.to_numeric(
+            continuous.get("ric", pd.Series("", index=continuous.index)).astype("string").str.extract(r"(?i)(?:mc|c)(\d+)$")[0],
+            errors="coerce",
+        )
+        continuous["month_num"] = ric_month.fillna(catalog_month)
+        continuous = continuous[continuous["month_num"].notna()].copy()
+        continuous["month_num"] = continuous["month_num"].astype(int)
+        continuous["curve_label"] = continuous["month_num"].map(lambda month: f"M{month}")
         continuous["curve_mode"] = "continuous"
+        continuous["family_key"] = continuous.apply(_curve_family_key, axis=1)
+        continuous["quote"] = continuous.apply(_curve_quote_label, axis=1)
         return continuous
     calendar = frame[term.eq("calendar")].copy()
     if calendar.empty or "calendar_month" not in calendar.columns:
@@ -541,20 +695,40 @@ def _curve_axis_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     calendar["month_num"] = calendar["month_num"].astype(int)
     calendar["curve_label"] = calendar["month_num"].map(lambda month: f"{month}月")
     calendar["curve_mode"] = "calendar"
+    calendar["family_key"] = (
+        calendar["sector"].astype(str) + "|" + calendar["product"].astype(str) + "|" + calendar["region"].astype(str)
+    )
+    calendar["quote"] = calendar["product"].astype(str)
     return calendar
+
+
+def curve_contract_catalog(
+    catalog: pd.DataFrame,
+    sector: str,
+    product: str,
+    region: str,
+    family_key: str | None = None,
+) -> pd.DataFrame:
+    curves = _curve_axis_catalog(catalog)
+    if curves.empty:
+        return curves
+    mask = (curves["sector"] == sector) & (curves["product"] == product) & (curves["region"] == region)
+    if family_key is not None:
+        mask &= curves["family_key"].astype(str).eq(str(family_key))
+    return curves[mask].sort_values("month_num").drop_duplicates("month_num").copy()
 
 
 def available_curve_groups(catalog: pd.DataFrame) -> pd.DataFrame:
     if catalog.empty:
-        return pd.DataFrame(columns=["sector", "product", "region", "count"])
+        return pd.DataFrame(columns=["sector", "product", "region", "family_key", "quote", "count"])
     curves = _curve_axis_catalog(catalog)
     if curves.empty:
-        return pd.DataFrame(columns=["sector", "product", "region", "count"])
+        return pd.DataFrame(columns=["sector", "product", "region", "family_key", "quote", "count"])
     return (
-        curves.groupby(["sector", "product", "region", "curve_mode"], dropna=False)
+        curves.groupby(["sector", "product", "region", "family_key", "quote", "curve_mode"], dropna=False)
         .size()
         .reset_index(name="count")
-        .sort_values(["sector", "product", "region"])
+        .sort_values(["sector", "product", "region", "quote"])
     )
 
 
@@ -572,28 +746,27 @@ def build_forward_curve(
     region: str,
     asof: pd.Timestamp | None = None,
     normalized: bool = True,
+    family_key: str | None = None,
+    catalog: pd.DataFrame | None = None,
+    wide: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    catalog = catalog_with_labels(df)
-    if catalog.empty:
+    source_catalog = catalog_with_labels(df) if catalog is None else catalog
+    if source_catalog.empty:
         return pd.DataFrame()
-    curves = _curve_axis_catalog(catalog)
-    curves = curves[
-        (curves["sector"] == sector)
-        & (curves["product"] == product)
-        & (curves["region"] == region)
-    ].copy()
+    curves = curve_contract_catalog(source_catalog, sector, product, region, family_key)
     if curves.empty:
         return pd.DataFrame()
-    curves = curves.sort_values("month_num")
-    wide = long_to_wide(df[df["series_id"].isin(curves["series_id"])], normalized=normalized)
-    if wide.empty:
+    curve_wide = wide
+    if curve_wide is None:
+        curve_wide = long_to_wide(df[df["series_id"].isin(curves["series_id"])], normalized=normalized)
+    if curve_wide.empty:
         return pd.DataFrame()
-    selected_asof = _nearest_asof(wide.index, asof or wide.index.max())
+    selected_asof = _nearest_asof(curve_wide.index, asof or curve_wide.index.max())
     if selected_asof is None:
         return pd.DataFrame()
     rows = []
     for _, row in curves.iterrows():
-        value = wide.at[selected_asof, row["series_id"]] if row["series_id"] in wide.columns else np.nan
+        value = curve_wide.at[selected_asof, row["series_id"]] if row["series_id"] in curve_wide.columns else np.nan
         rows.append(
             {
                 "asof": selected_asof,
@@ -603,7 +776,7 @@ def build_forward_curve(
                 "series_id": row["series_id"],
                 "display_name": row["display_name"],
                 "value": value,
-                "unit": row.get("unit_normalized") or row.get("unit_native", ""),
+                "unit": (row.get("unit_normalized") or row.get("unit_native", "")) if normalized else row.get("unit_native", ""),
             }
         )
     return pd.DataFrame(rows).dropna(subset=["value"])
@@ -615,14 +788,30 @@ def build_curve_history(
     product: str,
     region: str,
     offsets: Iterable[int] = (0, 7, 30, 90),
+    family_key: str | None = None,
+    normalized: bool = True,
 ) -> pd.DataFrame:
-    wide = long_to_wide(df, normalized=True)
+    catalog = catalog_with_labels(df)
+    contracts = curve_contract_catalog(catalog, sector, product, region, family_key)
+    if contracts.empty:
+        return pd.DataFrame()
+    wide = long_to_wide(df[df["series_id"].isin(contracts["series_id"])], normalized=normalized)
     if wide.empty:
         return pd.DataFrame()
     latest = wide.index.max()
     curves = []
     for offset in offsets:
-        curve = build_forward_curve(df, sector, product, region, latest - pd.Timedelta(days=int(offset)))
+        curve = build_forward_curve(
+            df,
+            sector,
+            product,
+            region,
+            latest - pd.Timedelta(days=int(offset)),
+            normalized=normalized,
+            family_key=family_key,
+            catalog=catalog,
+            wide=wide,
+        )
         if curve.empty:
             continue
         label = "Current" if offset == 0 else f"{offset}D ago"
