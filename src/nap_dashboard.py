@@ -143,6 +143,7 @@ AMBER = "#d29b47"
 NEGATIVE = "#bf5b5b"
 POSITIVE = "#4b9b72"
 NEUTRAL = "#7f8c8d"
+SEASONAL_HOVER_FORMAT = "%m月%d日"
 
 
 def _arrow_render_available() -> bool:
@@ -1595,7 +1596,16 @@ def _add_weekly_seasonality_panel(
             )
     if zero_line:
         fig.add_hline(y=0, line_dash="dot", line_color="#8c9aa3", line_width=1, row=row, col=col)
-    fig.update_xaxes(title_text="月份", tickformat="%m月", dtick="M1", showgrid=True, gridcolor="#e5ebef", row=row, col=col)
+    fig.update_xaxes(
+        title_text="月份",
+        tickformat="%m月",
+        hoverformat=SEASONAL_HOVER_FORMAT,
+        dtick="M1",
+        showgrid=True,
+        gridcolor="#e5ebef",
+        row=row,
+        col=col,
+    )
     fig.update_yaxes(title_text=y_title, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=row, col=col)
     if range_values:
         sample = pd.Series(range_values, dtype=float).replace([np.inf, -np.inf], np.nan).dropna()
@@ -2126,7 +2136,7 @@ def render_seasonality(df: pd.DataFrame, unit_mode: str, unit_factors: dict[str,
                         showlegend=False,
                     )
                 )
-        fig.update_xaxes(title="月份", tickformat="%m月", dtick="M1")
+        fig.update_xaxes(title="月份", tickformat="%m月", hoverformat=SEASONAL_HOVER_FORMAT, dtick="M1")
         fig.update_yaxes(title="数值")
         _apply_fig_layout(fig, f"{meta['display_name']} 季节性走势")
         st.plotly_chart(fig, width="stretch")
@@ -2210,7 +2220,7 @@ def _render_spread_seasonality(spread: pd.Series, title: str, unit: str, key_pre
             )
         )
     fig.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
-    fig.update_xaxes(title="月份", tickformat="%m月", dtick="M1")
+    fig.update_xaxes(title="月份", tickformat="%m月", hoverformat=SEASONAL_HOVER_FORMAT, dtick="M1")
     fig.update_yaxes(title=unit or "价差")
     _apply_fig_layout(fig, f"{title} 季节图")
     st.plotly_chart(fig, width="stretch")
@@ -2556,7 +2566,7 @@ def _render_combo_m1_seasonality(selected_name: str, series_by_month: dict[str, 
             )
         )
     fig.add_hline(y=0, line_dash="dot", line_color=NEUTRAL)
-    fig.update_xaxes(title="月份", tickformat="%m月", dtick="M1")
+    fig.update_xaxes(title="月份", tickformat="%m月", hoverformat=SEASONAL_HOVER_FORMAT, dtick="M1")
     fig.update_yaxes(title=unit)
     _apply_fig_layout(fig, f"{selected_name} {front_key} 季节图")
     st.plotly_chart(fig, width="stretch")
@@ -2847,7 +2857,16 @@ def _weekly_combo_figure(
             col=2,
         )
     fig.add_hline(y=0, line_dash="dot", line_color="#8c9aa3", line_width=1, row=1, col=2)
-    fig.update_xaxes(title_text="月份", tickformat="%m月", dtick="M1", showgrid=True, gridcolor="#e5ebef", row=1, col=1)
+    fig.update_xaxes(
+        title_text="月份",
+        tickformat="%m月",
+        hoverformat=SEASONAL_HOVER_FORMAT,
+        dtick="M1",
+        showgrid=True,
+        gridcolor="#e5ebef",
+        row=1,
+        col=1,
+    )
     _apply_continuous_contract_axis(fig, curve_asof, row=1, col=2)
     fig.update_yaxes(title_text=unit, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=1, col=1)
     fig.update_yaxes(title_text=unit, showgrid=True, gridcolor="#e5ebef", zeroline=False, row=1, col=2)

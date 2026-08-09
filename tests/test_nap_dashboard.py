@@ -14,6 +14,7 @@ from src.nap_dashboard import (
     _market_contract_view,
     _optimize_frame_memory,
     _weekly_convert_panels,
+    _weekly_seasonality_figure,
 )
 from src.unit_conversion import convert_quote_values
 
@@ -287,6 +288,21 @@ def test_weekly_panel_unit_conversion_uses_declared_factor():
     converted = _weekly_convert_panels(panels, "mt", {"crude": 7.33})
     assert converted[0]["series"].tolist() == pytest.approx([7.33, 14.66])
     assert panels[0]["series"].tolist() == [1.0, 2.0]
+
+
+def test_weekly_seasonality_hover_title_includes_month_and_day():
+    series = pd.Series(
+        [100.0, 101.0, 102.0],
+        index=pd.to_datetime(["2025-07-18", "2025-07-21", "2025-07-22"]),
+    )
+    fig = _weekly_seasonality_figure(
+        [{"title": "测试季节图", "series": series}],
+        title="测试",
+        years=5,
+    )
+
+    assert fig.layout.xaxis.tickformat == "%m月"
+    assert fig.layout.xaxis.hoverformat == "%m月%d日"
 
 
 def test_custom_crack_spread_honors_requested_metric_ton_unit():

@@ -151,6 +151,34 @@ class ParsedSeries:
     first_data_row: int
 
 
+def _validate_unique_ric_requests(parsed_series: list[ParsedSeries]) -> None:
+    """Reject duplicate Reuters requests before they collapse into one series ID."""
+    by_identity: dict[tuple[str, str], list[ParsedSeries]] = {}
+    for parsed in parsed_series:
+        ric = str(parsed.ric or "").strip()
+        if not ric:
+            continue
+        by_identity.setdefault((parsed.sheet, ric), []).append(parsed)
+
+    duplicates = {
+        identity: items
+        for identity, items in by_identity.items()
+        if len(items) > 1
+    }
+    if not duplicates:
+        return
+
+    details = []
+    for (sheet, ric), items in sorted(duplicates.items()):
+        labels = ", ".join(dict.fromkeys(str(item.display_name or item.short_name or "-") for item in items))
+        details.append(f"{sheet}: {ric} -> {labels}")
+    raise ValueError(
+        "Duplicate Reuters RIC request metadata would overwrite a contract series: "
+        + "; ".join(details)
+        + ". Correct the workbook RIC input before parsing."
+    )
+
+
 def project_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
@@ -1206,6 +1234,7 @@ def parse_nap_workbook(
                 parsed_series.extend(_parse_rdp_sheet(sheet, df, rdp_formulas[0]))
             for formula in rhistory_formulas:
                 parsed_series.extend(_parse_rhistory_formula_group(sheet, df, formula))
+            _validate_unique_ric_requests(parsed_series)
 
             for parsed in parsed_series:
                 stable_series_id = catalog_identity_ids.get((parsed.sheet, parsed.ric))
@@ -1259,6 +1288,7 @@ def load_nap_timeseries(
     cache_path: str | Path | None = None,
     catalog_path: str | Path | None = None,
     refresh: bool = False,
+    generate_catalog_file: bool = True,
 ) -> pd.DataFrame:
     workbook = Path(workbook_path)
     cache = Path(cache_path) if cache_path else default_cache_path()
@@ -1281,7 +1311,11 @@ def load_nap_timeseries(
                     return _apply_catalog_overrides(cached, catalog)
                 return cached
 
-    df = parse_nap_workbook(workbook, catalog_path=catalog, generate_catalog_file=True)
+    df = parse_nap_workbook(
+        workbook,
+        catalog_path=catalog,
+        generate_catalog_file=generate_catalog_file,
+    )
     _write_cache(df, cache)
     return df
 

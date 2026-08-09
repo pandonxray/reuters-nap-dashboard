@@ -5,6 +5,8 @@ import pytest
 
 from src.nap_adapter import (
     DEFAULT_NAP_WORKBOOK,
+    ParsedSeries,
+    _validate_unique_ric_requests,
     coerce_excel_dates,
     coerce_excel_numeric,
     load_nap_timeseries,
@@ -43,6 +45,25 @@ def test_excel_date_formatted_negative_number_is_recovered():
 
 def test_usd_per_gallon_to_usd_per_barrel_conversion():
     assert usd_per_gallon_to_usd_per_barrel(2.5) == 105.0
+
+
+def test_duplicate_reuters_ric_requests_fail_before_contract_data_is_overwritten():
+    shared = {
+        "sheet": "Nap",
+        "short_name": "",
+        "name_native": "",
+        "source": "RDP.HistoricalPricing",
+        "is_derived": False,
+        "header_row": 0,
+        "first_data_row": 1,
+    }
+    parsed = [
+        ParsedSeries(display_name="日本CFR连2", ric="NACFRJPSWMc2", date_col=17, value_col=18, **shared),
+        ParsedSeries(display_name="日本CFR连3", ric="NACFRJPSWMc2", date_col=19, value_col=20, **shared),
+    ]
+
+    with pytest.raises(ValueError, match=r"NACFRJPSWMc2.*日本CFR连2, 日本CFR连3"):
+        _validate_unique_ric_requests(parsed)
 
 
 def test_nap_workbook_detects_required_series_counts(nap_frame: pd.DataFrame):
@@ -109,6 +130,14 @@ def test_ric_contract_month_overrides_mislabeled_display_name(nap_frame: pd.Data
     assert not mopj_m2.empty
     assert set(mopj_m2["contract_month"].astype(str)) == {"M2"}
     assert set(mopj_m2["display_name"].astype(str)) == {"日本CFR连2"}
+
+
+def test_mopj_continuous_curve_has_all_twelve_contracts(nap_frame: pd.DataFrame):
+    mopj = nap_frame[
+        nap_frame["ric"].astype(str).str.fullmatch(r"NACFRJPSWMc(?:[1-9]|1[0-2])", na=False)
+    ]
+    assert mopj["series_id"].nunique() == 12
+    assert set(mopj["contract_month"].astype(str)) == {f"M{month}" for month in range(1, 13)}
 
 
 def test_foreign_product_vlookup_panel_is_not_loaded_as_raw_reuters_series(nap_frame: pd.DataFrame):

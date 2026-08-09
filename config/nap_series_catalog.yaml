@@ -1007,6 +1007,22 @@ series:
   ric: HFOFARAACMc11
   is_derived: false
   source: RDP.HistoricalPricing
+- series_id: crk_hfofaraacmc12_ba97472da2
+  display_name: 欧洲高硫裂差M12
+  sheet: Crk
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: M12
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: HFOFARAACMc12
+  is_derived: false
+  source: RDP.HistoricalPricing
 - series_id: crk_hfofaraacmc2_2de49d5a64
   display_name: 欧洲高硫裂差M2
   sheet: Crk
@@ -2861,6 +2877,198 @@ series:
   unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
   unit_source: Reuters crack spread / exchange crack-spread convention
   ric: CAL_JETFCNWECK_09
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_10_7ce6e51622
+  display_name: 欧洲高硫裂差 10月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 10
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_10
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_11_0fda32174c
+  display_name: 欧洲高硫裂差 11月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 11
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_11
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_12_caeda19dbf
+  display_name: 欧洲高硫裂差 12月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 12
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_12
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_01_2b669d35f1
+  display_name: 欧洲高硫裂差 1月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 1
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_01
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_02_5558b18a72
+  display_name: 欧洲高硫裂差 2月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 2
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_02
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_03_3c76a05198
+  display_name: 欧洲高硫裂差 3月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 3
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_03
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_04_2d85ccfc8b
+  display_name: 欧洲高硫裂差 4月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 4
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_04
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_05_3b47db9ef6
+  display_name: 欧洲高硫裂差 5月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 5
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_05
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_06_f8cb9cce8f
+  display_name: 欧洲高硫裂差 6月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 6
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_06
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_07_e5fcf2d833
+  display_name: 欧洲高硫裂差 7月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 7
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_07
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_08_9bbd30fe08
+  display_name: 欧洲高硫裂差 8月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 8
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_08
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: crk_cal_hfofaraac_09_318c7754bf
+  display_name: 欧洲高硫裂差 9月
+  sheet: Crk_自然月
+  sector: Cracks
+  product: HSFO
+  region: Europe
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 9
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: CAL_HFOFARAAC_09
   is_derived: true
   source: CalendarMonthFormula
 - series_id: crk_cal_hocclc_10_1eafbe5d27
@@ -12640,12 +12848,12 @@ series:
   is_derived: false
   source: RDP.HistoricalPricing
 - series_id: nap_nacfrjpswmc2_e114f6bae1
-  display_name: 日本CFR连3
+  display_name: 日本CFR连2
   sheet: Nap
   sector: Naphtha
   product: Naphtha
   region: Japan
-  contract_month: M3
+  contract_month: M2
   term_type: continuous
   calendar_month: ''
   unit_native: USD/mt
@@ -14511,6 +14719,54 @@ series:
   ric: TC-YOS-SIN
   is_derived: false
   source: RHistory
+- series_id: voyage_rate_bbl_2a76bba285
+  display_name: Voyage Rate (BBL)
+  sheet: 成品油(国内汽柴表)
+  sector: Freight
+  product: Freight
+  region: Global
+  contract_month: ''
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters freight route convention
+  ric: ''
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: voyage_rate_bbl_e2b1487d04
+  display_name: Voyage Rate (BBL)
+  sheet: 成品油(国内汽柴表)
+  sector: Freight
+  product: Freight
+  region: Global
+  contract_month: ''
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters freight route convention
+  ric: ''
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: voyage_rate_bbl_f02a34e0b9
+  display_name: Voyage Rate (BBL)
+  sheet: 成品油(国内汽柴表)
+  sector: Freight
+  product: Freight
+  region: Global
+  contract_month: ''
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters freight route convention
+  ric: ''
+  is_derived: false
+  source: RDP.HistoricalPricing
 - series_id: tc_ams_nyc_49fb0cb56f
   display_name: Voyage Rate (BBL)
   sheet: 成品油(国外汽柴表)
