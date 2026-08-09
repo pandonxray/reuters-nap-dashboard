@@ -268,6 +268,37 @@ def dynamic_source_range(item, attr: str, source_row_limit: int) -> str:
     return f"{quoted}!${col}${start_row}:${col}${source_row_limit}"
 
 
+def source_cell_ref(item, attr: str, row_offset: int) -> str:
+    col_idx = item.date_col + 1 if attr == "date" else item.value_col + 1
+    col = get_column_letter(col_idx)
+    row = item.first_data_row + 1 + row_offset
+    quoted = quote_sheetname(item.sheet)
+    return f"{quoted}!${col}{row}"
+
+
+def source_value_matrix_range(group: dict, extra_rows: int) -> str:
+    month_items = group["month_items"]
+    first = month_items[0]
+    last = month_items[-1]
+    start_col = get_column_letter(first.value_col + 1)
+    end_col = get_column_letter(last.value_col + 1)
+    start_row = first.first_data_row + 1
+    end_row = start_row + extra_rows - 1
+    quoted = quote_sheetname(first.sheet)
+    return f"{quoted}!${start_col}${start_row}:${end_col}${end_row}"
+
+
+def dynamic_value_matrix_range(group: dict, source_row_limit: int) -> str:
+    month_items = group["month_items"]
+    first = month_items[0]
+    last = month_items[-1]
+    start_col = get_column_letter(first.value_col + 1)
+    end_col = get_column_letter(last.value_col + 1)
+    start_row = first.first_data_row + 1
+    quoted = quote_sheetname(first.sheet)
+    return f"{quoted}!${start_col}${start_row}:${end_col}${source_row_limit}"
+
+
 def add_calendar_sheet(
     wb,
     source_sheet: str,
@@ -328,27 +359,25 @@ def add_calendar_sheet(
     ws.cell(row=6, column=1).number_format = "yyyy-mm-dd"
 
     for group_idx, group in enumerate(groups):
-        month_items = group["month_items"]
-        value_ranges = [dynamic_source_range(item, "value", source_row_limit) for item in month_items]
-        for target_month in range(1, 13):
-            col = 2 + group_idx * 12 + target_month - 1
-            month_header = f"{get_column_letter(col)}$5"
-            choices = ",".join([f"INDEX({rng},rr)" for rng in value_ranges])
-            formula = (
-                f'=LET(d,$A$6#,r,SEQUENCE(ROWS(d)),m,{month_header},'
-                f'MAP(d,r,LAMBDA(x,rr,IFERROR(CHOOSE(MOD(m-MONTH(x),12)+1,{choices}),""))))'
+        col = 2 + group_idx * 12
+        value_matrix = dynamic_value_matrix_range(group, source_row_limit)
+        formula = (
+            f'=LET(d,$A$6#,src,{value_matrix},'
+            'MAKEARRAY(ROWS(d),12,LAMBDA(r,m,LET('
+            'c,1+2*MOD(m-MONTH(INDEX(d,r)),12),'
+            'IFERROR(IF(COUNTBLANK(INDEX(src,r,c))>0,"",INDEX(src,r,c)),"")))))'
+        )
+        if formula_entries is None:
+            ws.cell(row=6, column=col).value = formula
+        else:
+            formula_entries.append(
+                {
+                    "sheet": output_name,
+                    "cell": f"{get_column_letter(col)}6",
+                    "formula": formula,
+                }
             )
-            if formula_entries is None:
-                ws.cell(row=6, column=col).value = formula
-            else:
-                formula_entries.append(
-                    {
-                        "sheet": output_name,
-                        "cell": f"{get_column_letter(col)}6",
-                        "formula": formula,
-                    }
-                )
-            ws.cell(row=6, column=col).number_format = "#,##0.00"
+        ws.cell(row=6, column=col).number_format = "#,##0.00"
 
     copy_dimensions(wb[source_sheet], ws, max_col)
     style_sheet(ws, max_row, max_col, groups)
@@ -421,6 +450,73 @@ def add_filled_calendar_sheet(wb, source_sheet: str, groups: list[dict], future_
     style_sheet(ws, max_row, max_col, groups)
 
 
+def add_light_calendar_sheet(wb, source_sheet: str, groups: list[dict], future_rows: int) -> None:
+    output_name = OUTPUT_SHEET_NAMES[source_sheet]
+    if output_name in wb.sheetnames:
+        del wb[output_name]
+    ws = wb.create_sheet(output_name)
+
+    if not groups:
+        ws["A1"] = f"{source_sheet}：C1-C12 反算自然月"
+        ws["A2"] = "未发现完整的 C1-C12 连续月产品组；因此这里只保留说明，不生成自然月公式列。"
+        style_sheet(ws, 2, 1, [])
+        return
+
+    source_ws = wb[source_sheet]
+    data_rows = max(1, source_ws.max_row - 1 + future_rows)
+    max_row = 5 + data_rows
+    max_col = 1 + len(groups) * 12
+
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=max_col)
+    ws["A1"] = f"{source_sheet}：C1-C12 连续月反算为 1-12 月自然月（轻公式版）"
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=max_col)
+    ws["A2"] = (
+        "轻公式逻辑：每个值单元格只用一个 INDEX 在 C1-C12 横向矩阵中取数。"
+        "目标自然月 m 使用 Ck，k=MOD(m-MONTH(日期),12)+1；例如日期在 7 月，7 月取 C1，8 月取 C2，次年 6 月取 C12。"
+    )
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=max_col)
+    ws["A3"] = (
+        f"本页已向下预填 {future_rows} 行未来公式；Reuters 刷新源 sheet 后，这些公式会自动读取新增行。"
+        "相比旧版 CHOOSE+12个INDEX，轻公式版显著减少重算依赖。"
+    )
+
+    ws["A4"] = "日期"
+    ws["A5"] = "日期"
+
+    for group_idx, group in enumerate(groups):
+        start_col = 2 + group_idx * 12
+        end_col = start_col + 11
+        ws.merge_cells(start_row=4, start_column=start_col, end_row=4, end_column=end_col)
+        ws.cell(row=4, column=start_col).value = group["label"]
+        for month in range(1, 13):
+            cell = ws.cell(row=5, column=start_col + month - 1)
+            cell.value = month
+            cell.number_format = '0"月"'
+            cell.comment = Comment(
+                f"{group['label']} 自然月 {month} 月。根据本行日期自动选择 C1-C12 中对应的连续月。", "Codex"
+            )
+
+    first_date_item = groups[0]["month_items"][0]
+    for row in range(6, max_row + 1):
+        row_offset = row - 6
+        date_ref = source_cell_ref(first_date_item, "date", row_offset)
+        ws.cell(row=row, column=1).value = f'=IF({date_ref}="","",{date_ref})'
+
+    for group_idx, group in enumerate(groups):
+        value_matrix = source_value_matrix_range(group, data_rows)
+        for target_month in range(1, 13):
+            col = 2 + group_idx * 12 + target_month - 1
+            month_header = f"{get_column_letter(col)}$5"
+            for row in range(6, max_row + 1):
+                ws.cell(row=row, column=col).value = (
+                    f'=IF($A{row}="","",IFERROR(INDEX({value_matrix},ROW()-5,'
+                    f'1+2*MOD({month_header}-MONTH($A{row}),12)),""))'
+                )
+
+    copy_dimensions(source_ws, ws, max_col)
+    style_sheet(ws, max_row, max_col, groups)
+
+
 def build_workbook(
     input_path: Path,
     output_path: Path,
@@ -436,12 +532,14 @@ def build_workbook(
         for sheet in TARGET_SHEETS:
             if formula_mode == "dynamic":
                 add_calendar_sheet(wb, sheet, groups_by_sheet.get(sheet, []), source_row_limit, formula_entries)
+            elif formula_mode == "light":
+                add_light_calendar_sheet(wb, sheet, groups_by_sheet.get(sheet, []), future_rows)
             else:
                 add_filled_calendar_sheet(wb, sheet, groups_by_sheet.get(sheet, []), future_rows)
 
         if hasattr(wb, "calculation"):
-            wb.calculation.fullCalcOnLoad = True
-            wb.calculation.forceFullCalc = True
+            wb.calculation.fullCalcOnLoad = formula_mode != "light"
+            wb.calculation.forceFullCalc = formula_mode != "light"
             wb.calculation.calcMode = "auto"
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -463,7 +561,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=None)
     parser.add_argument("--source-row-limit", type=int, default=20000)
     parser.add_argument("--formula-manifest", type=Path, default=None)
-    parser.add_argument("--formula-mode", choices=["filled", "dynamic"], default="filled")
+    parser.add_argument("--formula-mode", choices=["filled", "dynamic", "light"], default="filled")
     parser.add_argument("--future-rows", type=int, default=1500)
     args = parser.parse_args()
 

@@ -4,6 +4,7 @@ import hashlib
 import logging
 import re
 from dataclasses import dataclass
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -20,8 +21,10 @@ GALLONS_PER_PETROLEUM_BARREL = 42.0
 NAPHTHA_BBLS_PER_METRIC_TON = 8.9
 EBOB_BBLS_PER_METRIC_TON = 8.33
 GASOIL_BBLS_PER_METRIC_TON = 7.45
+JET_BBLS_PER_METRIC_TON = 7.88
+CACHE_SCHEMA_VERSION = "2026-07-12-contract-month-v5"
 DEFAULT_NAP_WORKBOOK = Path(
-    r"C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_live_formula.xlsx"
+    r"C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_ultralight_formula.xlsx"
 )
 STANDARD_COLUMNS = [
     "date",
@@ -148,6 +151,34 @@ class ParsedSeries:
     first_data_row: int
 
 
+def _validate_unique_ric_requests(parsed_series: list[ParsedSeries]) -> None:
+    """Reject duplicate Reuters requests before they collapse into one series ID."""
+    by_identity: dict[tuple[str, str], list[ParsedSeries]] = {}
+    for parsed in parsed_series:
+        ric = str(parsed.ric or "").strip()
+        if not ric:
+            continue
+        by_identity.setdefault((parsed.sheet, ric), []).append(parsed)
+
+    duplicates = {
+        identity: items
+        for identity, items in by_identity.items()
+        if len(items) > 1
+    }
+    if not duplicates:
+        return
+
+    details = []
+    for (sheet, ric), items in sorted(duplicates.items()):
+        labels = ", ".join(dict.fromkeys(str(item.display_name or item.short_name or "-") for item in items))
+        details.append(f"{sheet}: {ric} -> {labels}")
+    raise ValueError(
+        "Duplicate Reuters RIC request metadata would overwrite a contract series: "
+        + "; ".join(details)
+        + ". Correct the workbook RIC input before parsing."
+    )
+
+
 def project_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
@@ -250,6 +281,30 @@ def _unit_rule(sheet: str, display_name: str, ric: str) -> dict[str, Any]:
             "factor": 1.0,
             "conversion": "原始已为 USD/bbl，价差/裂解计算不做桶吨换算。",
             "source": "Reuters crack spread / exchange crack-spread convention",
+        }
+    if ric_upper.startswith(("JETFUSGC", "CAL_JETFUSGC")):
+        return {
+            "unit_native": "USC/gal",
+            "unit_normalized": "USD/bbl",
+            "factor": 0.42,
+            "conversion": "美分/gal × 0.42 = USD/bbl。",
+            "source": "Reuters USGC jet quote convention; 42 gallons per barrel",
+        }
+    if ric_upper.startswith(("JETFCNWE", "CAL_JETFCNWE")):
+        return {
+            "unit_native": "USD/mt",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0 / JET_BBLS_PER_METRIC_TON,
+            "conversion": f"航煤: USD/mt ÷ {JET_BBLS_PER_METRIC_TON:.2f} = USD/bbl。",
+            "source": "Dashboard jet-fuel density convention; editable display factor",
+        }
+    if ric_upper.startswith(("JETSGSW", "CAL_JETSG")):
+        return {
+            "unit_native": "USD/bbl",
+            "unit_normalized": "USD/bbl",
+            "factor": 1.0,
+            "conversion": "原始已为 USD/bbl。",
+            "source": "Reuters Singapore jet quote convention",
         }
     if ric_upper.startswith(("RB", "HO")) or "rbob" in text or re.search(r"\bho\b", text):
         return {
@@ -394,12 +449,28 @@ def coerce_excel_dates(values: pd.Series) -> pd.Series:
     return parsed
 
 
+def coerce_excel_numeric(values: pd.Series) -> pd.Series:
+    """Recover numbers that Excel/openpyxl exposed as 1899-era datetimes."""
+    datetime_mask = values.map(lambda value: isinstance(value, (date, datetime, pd.Timestamp, np.datetime64)))
+    numeric = pd.Series(np.nan, index=values.index, dtype=float)
+    if (~datetime_mask).any():
+        numeric.loc[~datetime_mask] = pd.to_numeric(values.loc[~datetime_mask], errors="coerce")
+    if datetime_mask.any():
+        timestamps = pd.to_datetime(values.where(datetime_mask), errors="coerce")
+        epoch_values = (timestamps - pd.Timestamp(EXCEL_EPOCH)).dt.total_seconds() / 86400.0
+        malformed_number_mask = datetime_mask & timestamps.between("1890-01-01", "1905-12-31")
+        numeric.loc[malformed_number_mask] = epoch_values.loc[malformed_number_mask]
+    return numeric
+
+
 def _looks_like_date_series(values: pd.Series, min_points: int = 8) -> bool:
-    return int(coerce_excel_dates(values).notna().sum()) >= min_points
+    parsed = coerce_excel_dates(values)
+    realistic = parsed.between("1980-01-01", "2100-12-31")
+    return int(realistic.sum()) >= min_points
 
 
 def _looks_like_numeric_series(values: pd.Series, min_points: int = 8) -> bool:
-    return int(pd.to_numeric(values, errors="coerce").notna().sum()) >= min_points
+    return int(coerce_excel_numeric(values).notna().sum()) >= min_points
 
 
 def _worksheet_to_frame(ws) -> pd.DataFrame:
@@ -634,12 +705,27 @@ def _infer_product(display_name: str, ric: str, sheet: str) -> str:
 
 
 def _infer_contract_month(display_name: str, ric: str) -> str:
-    text = f"{display_name} {ric}"
-    for pattern in [r"\bM(\d{1,2})\b", r"连\s*(\d{1,2})", r"c(\d{1,2})\b"]:
+    ric_match = re.search(r"(?i)(?:mc|c)(\d{1,2})$", str(ric or "").strip())
+    if ric_match:
+        number = int(ric_match.group(1))
+        if 1 <= number <= 12:
+            return f"M{number}"
+    text = str(display_name or "")
+    for pattern in [r"\bM(\d{1,2})\b", r"连\s*(\d{1,2})"]:
         match = re.search(pattern, text, flags=re.IGNORECASE)
         if match:
             return f"M{int(match.group(1))}"
     return ""
+
+
+def _align_display_contract_month(display_name: str, contract_month: str) -> str:
+    match = re.fullmatch(r"M(\d{1,2})", str(contract_month or ""), flags=re.IGNORECASE)
+    if not match:
+        return display_name
+    month = int(match.group(1))
+    aligned = re.sub(r"连\s*\d{1,2}$", f"连{month}", str(display_name or ""))
+    aligned = re.sub(r"(?i)\bM\d{1,2}$", f"M{month}", aligned)
+    return aligned
 
 
 def _infer_unit(sheet: str, display_name: str, ric: str) -> tuple[str, str]:
@@ -651,15 +737,16 @@ def _series_to_records(
     df: pd.DataFrame,
     parsed: ParsedSeries,
     catalog_override: dict[str, Any] | None = None,
+    series_id_override: str | None = None,
 ) -> list[dict[str, Any]]:
     date_values = coerce_excel_dates(df.iloc[parsed.first_data_row :, parsed.date_col])
-    values = pd.to_numeric(df.iloc[parsed.first_data_row :, parsed.value_col], errors="coerce")
+    values = coerce_excel_numeric(df.iloc[parsed.first_data_row :, parsed.value_col])
     frame = pd.DataFrame({"date": date_values, "value": values}).dropna(subset=["date", "value"])
     if frame.empty:
         return []
 
     display_name = parsed.display_name or parsed.short_name or parsed.name_native or parsed.ric
-    series_id = _make_series_id(parsed.sheet, display_name, parsed.ric, parsed.value_col)
+    series_id = series_id_override or _make_series_id(parsed.sheet, display_name, parsed.ric, parsed.value_col)
     unit_native, unit_normalized = _infer_unit(parsed.sheet, display_name, parsed.ric)
     sector = _infer_sector(parsed.sheet, display_name, parsed.ric)
     product = _infer_product(display_name, parsed.ric, parsed.sheet)
@@ -674,6 +761,11 @@ def _series_to_records(
         contract_month = catalog_override.get("contract_month") or contract_month
         unit_native = catalog_override.get("unit_native") or unit_native
         unit_normalized = catalog_override.get("unit_normalized") or unit_normalized
+
+    ric_contract_month = _infer_contract_month("", parsed.ric)
+    if ric_contract_month:
+        contract_month = ric_contract_month
+        display_name = _align_display_contract_month(display_name, contract_month)
 
     unit_rule = _unit_rule(parsed.sheet, display_name, parsed.ric)
     if unit_rule.get("unit_native"):
@@ -832,20 +924,25 @@ def _parse_rdp_sheet(sheet: str, df: pd.DataFrame, formula: tuple[int, int, str,
         row: [_norm(df.iat[row, col]) for col in range(max(0, first_date_col))]
         for row in meta_rows
     }
-    for date_col in range(first_date_col, df.shape[1] - 1, 2):
+    date_col = first_date_col
+    while date_col < df.shape[1] - 1:
         value_col = date_col + 1
         date_series = df.iloc[first_data_row:, date_col]
         value_series = df.iloc[first_data_row:, value_col]
-        valid_dates = coerce_excel_dates(date_series).notna()
-        valid_values = pd.to_numeric(value_series, errors="coerce").notna()
+        parsed_dates = coerce_excel_dates(date_series)
+        valid_dates = parsed_dates.between("1980-01-01", "2100-12-31")
+        valid_values = coerce_excel_numeric(value_series).notna()
         valid_count = int((valid_dates & valid_values).sum())
         if valid_count < 8:
             invalid_streak += 1
-            if invalid_streak >= 3:
+            if invalid_streak >= 16 and parsed:
                 break
+            date_col += 1
             continue
         invalid_streak = 0
         header = _first_non_empty_above(df, first_data_row, value_col)
+        if not header:
+            header = _first_non_empty_above(df, first_data_row, date_col)
         meta_row = _find_meta_row_from_candidates(
             df,
             first_date_col,
@@ -872,6 +969,7 @@ def _parse_rdp_sheet(sheet: str, df: pd.DataFrame, formula: tuple[int, int, str,
             )
         )
         pair_index += 1
+        date_col += 2
     return parsed
 
 
@@ -946,6 +1044,27 @@ def _load_catalog_overrides(catalog_path: str | Path | None) -> dict[str, dict[s
     return {str(row.get("series_id")): dict(row) for row in rows if row.get("series_id")}
 
 
+def _apply_ric_contract_month_metadata(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty or "ric" not in df.columns:
+        return df
+    out = df.copy()
+    ric_month = pd.to_numeric(
+        out["ric"].astype("string").str.extract(r"(?i)(?:mc|c)(\d{1,2})$")[0],
+        errors="coerce",
+    )
+    mask = ric_month.between(1, 12, inclusive="both")
+    if not mask.any():
+        return out
+    month_labels = "M" + ric_month.loc[mask].astype(int).astype(str)
+    out.loc[mask, "contract_month"] = month_labels.to_numpy()
+    if "display_name" in out.columns:
+        out.loc[mask, "display_name"] = [
+            _align_display_contract_month(name, month)
+            for name, month in zip(out.loc[mask, "display_name"].astype(str), month_labels)
+        ]
+    return out
+
+
 def _apply_catalog_overrides(df: pd.DataFrame, catalog_path: str | Path | None) -> pd.DataFrame:
     if not df.empty:
         if "term_type" not in df.columns:
@@ -958,7 +1077,7 @@ def _apply_catalog_overrides(df: pd.DataFrame, catalog_path: str | Path | None) 
     if df.empty:
         return df
     if not overrides:
-        return _apply_unit_rule_metadata(df)
+        return _apply_unit_rule_metadata(_apply_ric_contract_month_metadata(df))
     out = df.copy()
     editable_cols = [
         "display_name",
@@ -986,7 +1105,7 @@ def _apply_catalog_overrides(df: pd.DataFrame, catalog_path: str | Path | None) 
         mask = mapped.notna() & mapped.ne("")
         if mask.any():
             out.loc[mask, col] = mapped[mask].astype(str).to_numpy()
-    return _apply_unit_rule_metadata(out)
+    return _apply_unit_rule_metadata(_apply_ric_contract_month_metadata(out))
 
 
 def _ensure_runtime_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -1088,6 +1207,12 @@ def parse_nap_workbook(
     wb_values = load_workbook(workbook, read_only=True, data_only=True)
     target_sheets = sheets or [sheet for sheet in RELEVANT_SHEETS if sheet in wb_values.sheetnames]
     all_records: list[dict[str, Any]] = []
+    catalog_overrides = _load_catalog_overrides(catalog_path or default_catalog_path())
+    catalog_identity_ids = {
+        (str(row.get("sheet") or ""), str(row.get("ric") or "")): series_id
+        for series_id, row in catalog_overrides.items()
+        if row.get("sheet") and row.get("ric")
+    }
 
     try:
         for sheet in target_sheets:
@@ -1109,9 +1234,11 @@ def parse_nap_workbook(
                 parsed_series.extend(_parse_rdp_sheet(sheet, df, rdp_formulas[0]))
             for formula in rhistory_formulas:
                 parsed_series.extend(_parse_rhistory_formula_group(sheet, df, formula))
+            _validate_unique_ric_requests(parsed_series)
 
             for parsed in parsed_series:
-                all_records.extend(_series_to_records(df, parsed))
+                stable_series_id = catalog_identity_ids.get((parsed.sheet, parsed.ric))
+                all_records.extend(_series_to_records(df, parsed, series_id_override=stable_series_id))
             logger.info("Parsed %s NAP series from sheet %s", len(parsed_series), sheet)
     finally:
         wb_formula.close()
@@ -1161,6 +1288,7 @@ def load_nap_timeseries(
     cache_path: str | Path | None = None,
     catalog_path: str | Path | None = None,
     refresh: bool = False,
+    generate_catalog_file: bool = True,
 ) -> pd.DataFrame:
     workbook = Path(workbook_path)
     cache = Path(cache_path) if cache_path else default_cache_path()
@@ -1169,6 +1297,13 @@ def load_nap_timeseries(
         cached = _read_cache(cache)
         if cached is not None:
             fallback = cache.with_suffix(cache.suffix + ".pkl")
+            if not cache.exists() and fallback.exists():
+                _write_cache(cached, cache)
+                if cache.exists():
+                    try:
+                        fallback.unlink()
+                    except OSError as exc:
+                        logger.warning("Unable to remove migrated pickle cache %s: %s", fallback, exc)
             cache_for_mtime = cache if cache.exists() else fallback
             if not workbook.exists() or cache_for_mtime.stat().st_mtime >= workbook.stat().st_mtime:
                 cached = _ensure_runtime_columns(cached)
@@ -1176,7 +1311,11 @@ def load_nap_timeseries(
                     return _apply_catalog_overrides(cached, catalog)
                 return cached
 
-    df = parse_nap_workbook(workbook, catalog_path=catalog, generate_catalog_file=True)
+    df = parse_nap_workbook(
+        workbook,
+        catalog_path=catalog,
+        generate_catalog_file=generate_catalog_file,
+    )
     _write_cache(df, cache)
     return df
 

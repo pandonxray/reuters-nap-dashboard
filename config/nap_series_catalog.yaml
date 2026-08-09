@@ -6794,8 +6794,8 @@ series:
   calendar_month: 10
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_10
   is_derived: true
   source: CalendarMonthFormula
@@ -6810,8 +6810,8 @@ series:
   calendar_month: 11
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_11
   is_derived: true
   source: CalendarMonthFormula
@@ -6826,8 +6826,8 @@ series:
   calendar_month: 12
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_12
   is_derived: true
   source: CalendarMonthFormula
@@ -6842,8 +6842,8 @@ series:
   calendar_month: 1
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_01
   is_derived: true
   source: CalendarMonthFormula
@@ -6858,8 +6858,8 @@ series:
   calendar_month: 2
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_02
   is_derived: true
   source: CalendarMonthFormula
@@ -6874,8 +6874,8 @@ series:
   calendar_month: 3
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_03
   is_derived: true
   source: CalendarMonthFormula
@@ -6890,8 +6890,8 @@ series:
   calendar_month: 4
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_04
   is_derived: true
   source: CalendarMonthFormula
@@ -6906,8 +6906,8 @@ series:
   calendar_month: 5
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_05
   is_derived: true
   source: CalendarMonthFormula
@@ -6922,8 +6922,8 @@ series:
   calendar_month: 6
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_06
   is_derived: true
   source: CalendarMonthFormula
@@ -6938,8 +6938,8 @@ series:
   calendar_month: 7
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_07
   is_derived: true
   source: CalendarMonthFormula
@@ -6954,8 +6954,8 @@ series:
   calendar_month: 8
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_08
   is_derived: true
   source: CalendarMonthFormula
@@ -6970,8 +6970,8 @@ series:
   calendar_month: 9
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_GO10SG_09
   is_derived: true
   source: CalendarMonthFormula
@@ -7562,8 +7562,8 @@ series:
   calendar_month: 10
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_10
   is_derived: true
   source: CalendarMonthFormula
@@ -7578,8 +7578,8 @@ series:
   calendar_month: 11
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_11
   is_derived: true
   source: CalendarMonthFormula
@@ -7594,8 +7594,8 @@ series:
   calendar_month: 12
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_12
   is_derived: true
   source: CalendarMonthFormula
@@ -7610,8 +7610,8 @@ series:
   calendar_month: 1
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_01
   is_derived: true
   source: CalendarMonthFormula
@@ -7626,8 +7626,8 @@ series:
   calendar_month: 2
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_02
   is_derived: true
   source: CalendarMonthFormula
@@ -7642,8 +7642,8 @@ series:
   calendar_month: 3
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_03
   is_derived: true
   source: CalendarMonthFormula
@@ -7658,8 +7658,8 @@ series:
   calendar_month: 4
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_04
   is_derived: true
   source: CalendarMonthFormula
@@ -7674,8 +7674,8 @@ series:
   calendar_month: 5
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_05
   is_derived: true
   source: CalendarMonthFormula
@@ -7690,8 +7690,8 @@ series:
   calendar_month: 6
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_06
   is_derived: true
   source: CalendarMonthFormula
@@ -7706,8 +7706,8 @@ series:
   calendar_month: 7
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_07
   is_derived: true
   source: CalendarMonthFormula
@@ -7722,8 +7722,8 @@ series:
   calendar_month: 8
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_08
   is_derived: true
   source: CalendarMonthFormula
@@ -7738,8 +7738,8 @@ series:
   calendar_month: 9
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_FO380SG_09
   is_derived: true
   source: CalendarMonthFormula
@@ -7754,8 +7754,8 @@ series:
   calendar_month: 10
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_10
   is_derived: true
   source: CalendarMonthFormula
@@ -7770,8 +7770,8 @@ series:
   calendar_month: 11
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_11
   is_derived: true
   source: CalendarMonthFormula
@@ -7786,8 +7786,8 @@ series:
   calendar_month: 12
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_12
   is_derived: true
   source: CalendarMonthFormula
@@ -7802,8 +7802,8 @@ series:
   calendar_month: 1
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_01
   is_derived: true
   source: CalendarMonthFormula
@@ -7818,8 +7818,8 @@ series:
   calendar_month: 2
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_02
   is_derived: true
   source: CalendarMonthFormula
@@ -7834,8 +7834,8 @@ series:
   calendar_month: 3
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_03
   is_derived: true
   source: CalendarMonthFormula
@@ -7850,8 +7850,8 @@ series:
   calendar_month: 4
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_04
   is_derived: true
   source: CalendarMonthFormula
@@ -7866,8 +7866,8 @@ series:
   calendar_month: 5
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_05
   is_derived: true
   source: CalendarMonthFormula
@@ -7882,8 +7882,8 @@ series:
   calendar_month: 6
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_06
   is_derived: true
   source: CalendarMonthFormula
@@ -7898,8 +7898,8 @@ series:
   calendar_month: 7
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_07
   is_derived: true
   source: CalendarMonthFormula
@@ -7914,8 +7914,8 @@ series:
   calendar_month: 8
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_08
   is_derived: true
   source: CalendarMonthFormula
@@ -7930,8 +7930,8 @@ series:
   calendar_month: 9
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_HFOFARAA_09
   is_derived: true
   source: CalendarMonthFormula
@@ -8954,8 +8954,8 @@ series:
   calendar_month: 10
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_10
   is_derived: true
   source: CalendarMonthFormula
@@ -8970,8 +8970,8 @@ series:
   calendar_month: 11
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_11
   is_derived: true
   source: CalendarMonthFormula
@@ -8986,8 +8986,8 @@ series:
   calendar_month: 12
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_12
   is_derived: true
   source: CalendarMonthFormula
@@ -9002,8 +9002,8 @@ series:
   calendar_month: 1
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_01
   is_derived: true
   source: CalendarMonthFormula
@@ -9018,8 +9018,8 @@ series:
   calendar_month: 2
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_02
   is_derived: true
   source: CalendarMonthFormula
@@ -9034,8 +9034,8 @@ series:
   calendar_month: 3
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_03
   is_derived: true
   source: CalendarMonthFormula
@@ -9050,8 +9050,8 @@ series:
   calendar_month: 4
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_04
   is_derived: true
   source: CalendarMonthFormula
@@ -9066,8 +9066,8 @@ series:
   calendar_month: 5
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_05
   is_derived: true
   source: CalendarMonthFormula
@@ -9082,8 +9082,8 @@ series:
   calendar_month: 6
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_06
   is_derived: true
   source: CalendarMonthFormula
@@ -9098,8 +9098,8 @@ series:
   calendar_month: 7
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_07
   is_derived: true
   source: CalendarMonthFormula
@@ -9114,8 +9114,8 @@ series:
   calendar_month: 8
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_08
   is_derived: true
   source: CalendarMonthFormula
@@ -9130,8 +9130,8 @@ series:
   calendar_month: 9
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG92SG_09
   is_derived: true
   source: CalendarMonthFormula
@@ -9146,8 +9146,8 @@ series:
   calendar_month: 10
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_10
   is_derived: true
   source: CalendarMonthFormula
@@ -9162,8 +9162,8 @@ series:
   calendar_month: 11
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_11
   is_derived: true
   source: CalendarMonthFormula
@@ -9178,8 +9178,8 @@ series:
   calendar_month: 12
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_12
   is_derived: true
   source: CalendarMonthFormula
@@ -9194,8 +9194,8 @@ series:
   calendar_month: 1
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_01
   is_derived: true
   source: CalendarMonthFormula
@@ -9210,8 +9210,8 @@ series:
   calendar_month: 2
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_02
   is_derived: true
   source: CalendarMonthFormula
@@ -9226,8 +9226,8 @@ series:
   calendar_month: 3
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_03
   is_derived: true
   source: CalendarMonthFormula
@@ -9242,8 +9242,8 @@ series:
   calendar_month: 4
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_04
   is_derived: true
   source: CalendarMonthFormula
@@ -9258,8 +9258,8 @@ series:
   calendar_month: 5
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_05
   is_derived: true
   source: CalendarMonthFormula
@@ -9274,8 +9274,8 @@ series:
   calendar_month: 6
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_06
   is_derived: true
   source: CalendarMonthFormula
@@ -9290,8 +9290,8 @@ series:
   calendar_month: 7
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_07
   is_derived: true
   source: CalendarMonthFormula
@@ -9306,8 +9306,8 @@ series:
   calendar_month: 8
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_08
   is_derived: true
   source: CalendarMonthFormula
@@ -9322,8 +9322,8 @@ series:
   calendar_month: 9
   unit_native: USD/bbl
   unit_normalized: USD/bbl
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters gasoline quote convention
   ric: CAL_MOG95SG_09
   is_derived: true
   source: CalendarMonthFormula
@@ -9720,10 +9720,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 10
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_10
   is_derived: true
   source: CalendarMonthFormula
@@ -9736,10 +9736,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 11
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_11
   is_derived: true
   source: CalendarMonthFormula
@@ -9752,10 +9752,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 12
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_12
   is_derived: true
   source: CalendarMonthFormula
@@ -9768,10 +9768,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 1
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_01
   is_derived: true
   source: CalendarMonthFormula
@@ -9784,10 +9784,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 2
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_02
   is_derived: true
   source: CalendarMonthFormula
@@ -9800,10 +9800,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 3
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_03
   is_derived: true
   source: CalendarMonthFormula
@@ -9816,10 +9816,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 4
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_04
   is_derived: true
   source: CalendarMonthFormula
@@ -9832,10 +9832,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 5
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_05
   is_derived: true
   source: CalendarMonthFormula
@@ -9848,10 +9848,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 6
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_06
   is_derived: true
   source: CalendarMonthFormula
@@ -9864,10 +9864,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 7
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_07
   is_derived: true
   source: CalendarMonthFormula
@@ -9880,10 +9880,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 8
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_08
   is_derived: true
   source: CalendarMonthFormula
@@ -9896,10 +9896,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 9
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: CAL_JETFCNWE_09
   is_derived: true
   source: CalendarMonthFormula
@@ -9912,10 +9912,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 10
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_10
   is_derived: true
   source: CalendarMonthFormula
@@ -9928,10 +9928,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 11
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_11
   is_derived: true
   source: CalendarMonthFormula
@@ -9944,10 +9944,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 12
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_12
   is_derived: true
   source: CalendarMonthFormula
@@ -9960,10 +9960,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 1
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_01
   is_derived: true
   source: CalendarMonthFormula
@@ -9976,10 +9976,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 2
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_02
   is_derived: true
   source: CalendarMonthFormula
@@ -9992,10 +9992,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 3
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_03
   is_derived: true
   source: CalendarMonthFormula
@@ -10008,10 +10008,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 4
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_04
   is_derived: true
   source: CalendarMonthFormula
@@ -10024,10 +10024,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 5
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_05
   is_derived: true
   source: CalendarMonthFormula
@@ -10040,10 +10040,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 6
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_06
   is_derived: true
   source: CalendarMonthFormula
@@ -10056,10 +10056,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 7
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_07
   is_derived: true
   source: CalendarMonthFormula
@@ -10072,10 +10072,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 8
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_08
   is_derived: true
   source: CalendarMonthFormula
@@ -10088,10 +10088,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 9
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: CAL_JETSG_09
   is_derived: true
   source: CalendarMonthFormula
@@ -10104,10 +10104,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 10
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_10
   is_derived: true
   source: CalendarMonthFormula
@@ -10120,10 +10120,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 11
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_11
   is_derived: true
   source: CalendarMonthFormula
@@ -10136,10 +10136,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 12
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_12
   is_derived: true
   source: CalendarMonthFormula
@@ -10152,10 +10152,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 1
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_01
   is_derived: true
   source: CalendarMonthFormula
@@ -10168,10 +10168,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 2
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_02
   is_derived: true
   source: CalendarMonthFormula
@@ -10184,10 +10184,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 3
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_03
   is_derived: true
   source: CalendarMonthFormula
@@ -10200,10 +10200,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 4
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_04
   is_derived: true
   source: CalendarMonthFormula
@@ -10216,10 +10216,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 5
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_05
   is_derived: true
   source: CalendarMonthFormula
@@ -10232,10 +10232,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 6
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_06
   is_derived: true
   source: CalendarMonthFormula
@@ -10248,10 +10248,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 7
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_07
   is_derived: true
   source: CalendarMonthFormula
@@ -10264,10 +10264,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 8
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_08
   is_derived: true
   source: CalendarMonthFormula
@@ -10280,10 +10280,10 @@ series:
   contract_month: ''
   term_type: calendar
   calendar_month: 9
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: CAL_JETFUSGC_09
   is_derived: true
   source: CalendarMonthFormula
@@ -10488,10 +10488,10 @@ series:
   contract_month: M1
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc1
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10504,10 +10504,10 @@ series:
   contract_month: M10
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc10
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10520,10 +10520,10 @@ series:
   contract_month: M11
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc11
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10536,10 +10536,10 @@ series:
   contract_month: M12
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc12
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10552,10 +10552,10 @@ series:
   contract_month: M2
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc2
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10568,10 +10568,10 @@ series:
   contract_month: M3
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc3
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10584,10 +10584,10 @@ series:
   contract_month: M4
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc4
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10600,10 +10600,10 @@ series:
   contract_month: M5
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc5
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10616,10 +10616,10 @@ series:
   contract_month: M6
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc6
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10632,10 +10632,10 @@ series:
   contract_month: M7
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc7
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10648,10 +10648,10 @@ series:
   contract_month: M8
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc8
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10664,10 +10664,10 @@ series:
   contract_month: M9
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '航煤: USD/mt ÷ 7.88 = USD/bbl。'
+  unit_source: Dashboard jet-fuel density convention; editable display factor
   ric: JETFCNWEMc9
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10680,10 +10680,10 @@ series:
   contract_month: M1
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc1
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10696,10 +10696,10 @@ series:
   contract_month: M10
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc10
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10712,10 +10712,10 @@ series:
   contract_month: M11
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc11
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10728,10 +10728,10 @@ series:
   contract_month: M12
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc12
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10744,10 +10744,10 @@ series:
   contract_month: M2
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc2
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10760,10 +10760,10 @@ series:
   contract_month: M3
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc3
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10776,10 +10776,10 @@ series:
   contract_month: M4
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc4
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10792,10 +10792,10 @@ series:
   contract_month: M5
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc5
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10808,10 +10808,10 @@ series:
   contract_month: M6
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc6
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10824,10 +10824,10 @@ series:
   contract_month: M7
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc7
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10840,10 +10840,10 @@ series:
   contract_month: M8
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc8
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10856,10 +10856,10 @@ series:
   contract_month: M9
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters Singapore jet quote convention
   ric: JETSGSWMc9
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10872,10 +10872,10 @@ series:
   contract_month: M1
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc1
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10888,10 +10888,10 @@ series:
   contract_month: M10
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc10
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10904,10 +10904,10 @@ series:
   contract_month: M11
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc11
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10920,10 +10920,10 @@ series:
   contract_month: M12
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc12
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10936,10 +10936,10 @@ series:
   contract_month: M2
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc2
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10952,10 +10952,10 @@ series:
   contract_month: M3
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc3
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10968,10 +10968,10 @@ series:
   contract_month: M4
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc4
   is_derived: false
   source: RDP.HistoricalPricing
@@ -10984,10 +10984,10 @@ series:
   contract_month: M5
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc5
   is_derived: false
   source: RDP.HistoricalPricing
@@ -11000,10 +11000,10 @@ series:
   contract_month: M6
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc6
   is_derived: false
   source: RDP.HistoricalPricing
@@ -11016,10 +11016,10 @@ series:
   contract_month: M7
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc7
   is_derived: false
   source: RDP.HistoricalPricing
@@ -11032,10 +11032,10 @@ series:
   contract_month: M8
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc8
   is_derived: false
   source: RDP.HistoricalPricing
@@ -11048,10 +11048,10 @@ series:
   contract_month: M9
   term_type: continuous
   calendar_month: ''
-  unit_native: ''
-  unit_normalized: ''
-  unit_conversion: ''
-  unit_source: ''
+  unit_native: USC/gal
+  unit_normalized: USD/bbl
+  unit_conversion: 美分/gal × 0.42 = USD/bbl。
+  unit_source: Reuters USGC jet quote convention; 42 gallons per barrel
   ric: JETFUSGCMc9
   is_derived: false
   source: RDP.HistoricalPricing
@@ -11258,8 +11258,8 @@ series:
   calendar_month: 10
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_10
   is_derived: true
   source: CalendarMonthFormula
@@ -11274,8 +11274,8 @@ series:
   calendar_month: 11
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_11
   is_derived: true
   source: CalendarMonthFormula
@@ -11290,8 +11290,8 @@ series:
   calendar_month: 12
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_12
   is_derived: true
   source: CalendarMonthFormula
@@ -11306,8 +11306,8 @@ series:
   calendar_month: 1
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_01
   is_derived: true
   source: CalendarMonthFormula
@@ -11322,8 +11322,8 @@ series:
   calendar_month: 2
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_02
   is_derived: true
   source: CalendarMonthFormula
@@ -11338,8 +11338,8 @@ series:
   calendar_month: 3
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_03
   is_derived: true
   source: CalendarMonthFormula
@@ -11354,8 +11354,8 @@ series:
   calendar_month: 4
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_04
   is_derived: true
   source: CalendarMonthFormula
@@ -11370,8 +11370,8 @@ series:
   calendar_month: 5
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_05
   is_derived: true
   source: CalendarMonthFormula
@@ -11386,8 +11386,8 @@ series:
   calendar_month: 6
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_06
   is_derived: true
   source: CalendarMonthFormula
@@ -11402,8 +11402,8 @@ series:
   calendar_month: 7
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_07
   is_derived: true
   source: CalendarMonthFormula
@@ -11418,8 +11418,8 @@ series:
   calendar_month: 8
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_08
   is_derived: true
   source: CalendarMonthFormula
@@ -11434,8 +11434,8 @@ series:
   calendar_month: 9
   unit_native: USD/MMBtu
   unit_normalized: USD/MMBtu
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始已为 USD/MMBtu。
+  unit_source: Reuters LNG/gas quote convention
   ric: CAL_A7Q_09
   is_derived: true
   source: CalendarMonthFormula
@@ -11965,6 +11965,198 @@ series:
   unit_conversion: 原始已为 USD/bbl。
   unit_source: Crude futures / swaps quote convention
   ric: NWEMWTITOPMc1
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc1_ce17facc50
+  display_name: MOPJ裂差连1
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M1
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc1
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc10_3235b19c07
+  display_name: MOPJ裂差连10
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M10
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc10
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc11_4378488b4e
+  display_name: MOPJ裂差连11
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M11
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc11
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc12_7774270c74
+  display_name: MOPJ裂差连12
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M12
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc12
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc2_2162bfca7f
+  display_name: MOPJ裂差连2
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M2
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc2
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc3_fe3c1a3b78
+  display_name: MOPJ裂差连3
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M3
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc3
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc4_6135dc16b3
+  display_name: MOPJ裂差连4
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M4
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc4
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc5_d04f3ab9c2
+  display_name: MOPJ裂差连5
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M5
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc5
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc6_0ce6c89c29
+  display_name: MOPJ裂差连6
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M6
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc6
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc7_e933236cb4
+  display_name: MOPJ裂差连7
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M7
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc7
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc8_4db1159114
+  display_name: MOPJ裂差连8
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M8
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc8
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpckmc9_9879fa22ee
+  display_name: MOPJ裂差连9
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Global
+  contract_month: M9
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
+  unit_source: Reuters crack spread / exchange crack-spread convention
+  ric: NACFRJPCKMc9
   is_derived: false
   source: RDP.HistoricalPricing
 - series_id: nap_napcnweacmc1_830c894353
@@ -12543,198 +12735,6 @@ series:
   ric: NAPJPEWMc9
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc1_ce17facc50
-  display_name: MOPJ裂差连1
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M1
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc1
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc10_3235b19c07
-  display_name: MOPJ裂差连10
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M10
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc10
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc11_4378488b4e
-  display_name: MOPJ裂差连11
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M11
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc11
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc12_7774270c74
-  display_name: MOPJ裂差连12
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M12
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc12
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc2_2162bfca7f
-  display_name: MOPJ裂差连2
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M2
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc2
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc3_fe3c1a3b78
-  display_name: MOPJ裂差连3
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M3
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc3
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc4_6135dc16b3
-  display_name: MOPJ裂差连4
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M4
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc4
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc5_d04f3ab9c2
-  display_name: MOPJ裂差连5
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M5
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc5
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc6_0ce6c89c29
-  display_name: MOPJ裂差连6
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M6
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc6
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc7_e933236cb4
-  display_name: MOPJ裂差连7
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M7
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc7
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc8_4db1159114
-  display_name: MOPJ裂差连8
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M8
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc8
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpckmc9_9879fa22ee
-  display_name: MOPJ裂差连9
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Global
-  contract_month: M9
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/bbl
-  unit_normalized: USD/bbl
-  unit_conversion: 原始已为 USD/bbl，价差/裂解计算不做桶吨换算。
-  unit_source: Reuters crack spread / exchange crack-spread convention
-  ric: NACFRJPCKMc9
-  is_derived: false
-  source: RDP.HistoricalPricing
 - series_id: nap_naf_1h_tyo_15c12c4835
   display_name: Naptha 1st Half Near Month Tokyo Japan CFR 日本CFR现货
   sheet: Nap
@@ -12847,29 +12847,13 @@ series:
   ric: NACFRJPSWMc12
   is_derived: false
   source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpswmc2_e683ecf3fa
+- series_id: nap_nacfrjpswmc2_e114f6bae1
   display_name: 日本CFR连2
   sheet: Nap
   sector: Naphtha
   product: Naphtha
   region: Japan
   contract_month: M2
-  term_type: continuous
-  calendar_month: ''
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: NACFRJPSWMc2
-  is_derived: false
-  source: RDP.HistoricalPricing
-- series_id: nap_nacfrjpswmc2_e114f6bae1
-  display_name: 日本CFR连3
-  sheet: Nap
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: M3
   term_type: continuous
   calendar_month: ''
   unit_native: USD/mt
@@ -13567,198 +13551,6 @@ series:
   ric: CAL_NAPCNWEA_09
   is_derived: true
   source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_10_d3ce6ea871
-  display_name: MOPJ 10月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 10
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_10
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_11_696ae8c3ef
-  display_name: MOPJ 11月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 11
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_11
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_12_d32758c9e4
-  display_name: MOPJ 12月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 12
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_12
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_01_ff443a7d84
-  display_name: MOPJ 1月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 1
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_01
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_02_a5b186ad7d
-  display_name: MOPJ 2月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 2
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_02
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_03_39bbb2940b
-  display_name: MOPJ 3月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 3
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_03
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_04_6f13850a11
-  display_name: MOPJ 4月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 4
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_04
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_05_ea48de01ef
-  display_name: MOPJ 5月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 5
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_05
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_06_78182a519f
-  display_name: MOPJ 6月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 6
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_06
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_07_6fae095481
-  display_name: MOPJ 7月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 7
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_07
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_08_5a012002eb
-  display_name: MOPJ 8月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 8
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_08
-  is_derived: true
-  source: CalendarMonthFormula
-- series_id: nap_cal_nacfrjp_09_6456328e53
-  display_name: MOPJ 9月
-  sheet: Nap_自然月
-  sector: Naphtha
-  product: Naphtha
-  region: Japan
-  contract_month: ''
-  term_type: calendar
-  calendar_month: 9
-  unit_native: USD/mt
-  unit_normalized: USD/bbl
-  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
-  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
-  ric: CAL_NACFRJP_09
-  is_derived: true
-  source: CalendarMonthFormula
 - series_id: nap_cal_napjpew_10_6135dc7b62
   display_name: 石脑油东西价差 10月
   sheet: Nap_自然月
@@ -13770,8 +13562,8 @@ series:
   calendar_month: 10
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_10
   is_derived: true
   source: CalendarMonthFormula
@@ -13786,8 +13578,8 @@ series:
   calendar_month: 11
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_11
   is_derived: true
   source: CalendarMonthFormula
@@ -13802,8 +13594,8 @@ series:
   calendar_month: 12
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_12
   is_derived: true
   source: CalendarMonthFormula
@@ -13818,8 +13610,8 @@ series:
   calendar_month: 1
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_01
   is_derived: true
   source: CalendarMonthFormula
@@ -13834,8 +13626,8 @@ series:
   calendar_month: 2
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_02
   is_derived: true
   source: CalendarMonthFormula
@@ -13850,8 +13642,8 @@ series:
   calendar_month: 3
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_03
   is_derived: true
   source: CalendarMonthFormula
@@ -13866,8 +13658,8 @@ series:
   calendar_month: 4
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_04
   is_derived: true
   source: CalendarMonthFormula
@@ -13882,8 +13674,8 @@ series:
   calendar_month: 5
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_05
   is_derived: true
   source: CalendarMonthFormula
@@ -13898,8 +13690,8 @@ series:
   calendar_month: 6
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_06
   is_derived: true
   source: CalendarMonthFormula
@@ -13914,8 +13706,8 @@ series:
   calendar_month: 7
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_07
   is_derived: true
   source: CalendarMonthFormula
@@ -13930,8 +13722,8 @@ series:
   calendar_month: 8
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_08
   is_derived: true
   source: CalendarMonthFormula
@@ -13946,8 +13738,8 @@ series:
   calendar_month: 9
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_NAPJPEW_09
   is_derived: true
   source: CalendarMonthFormula
@@ -14362,8 +14154,8 @@ series:
   calendar_month: 10
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_10
   is_derived: true
   source: CalendarMonthFormula
@@ -14378,8 +14170,8 @@ series:
   calendar_month: 11
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_11
   is_derived: true
   source: CalendarMonthFormula
@@ -14394,8 +14186,8 @@ series:
   calendar_month: 12
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_12
   is_derived: true
   source: CalendarMonthFormula
@@ -14410,8 +14202,8 @@ series:
   calendar_month: 1
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_01
   is_derived: true
   source: CalendarMonthFormula
@@ -14426,8 +14218,8 @@ series:
   calendar_month: 2
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_02
   is_derived: true
   source: CalendarMonthFormula
@@ -14442,8 +14234,8 @@ series:
   calendar_month: 3
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_03
   is_derived: true
   source: CalendarMonthFormula
@@ -14458,8 +14250,8 @@ series:
   calendar_month: 4
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_04
   is_derived: true
   source: CalendarMonthFormula
@@ -14474,8 +14266,8 @@ series:
   calendar_month: 5
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_05
   is_derived: true
   source: CalendarMonthFormula
@@ -14490,8 +14282,8 @@ series:
   calendar_month: 6
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_06
   is_derived: true
   source: CalendarMonthFormula
@@ -14506,8 +14298,8 @@ series:
   calendar_month: 7
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_07
   is_derived: true
   source: CalendarMonthFormula
@@ -14522,8 +14314,8 @@ series:
   calendar_month: 8
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_08
   is_derived: true
   source: CalendarMonthFormula
@@ -14538,8 +14330,8 @@ series:
   calendar_month: 9
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROFEI_09
   is_derived: true
   source: CalendarMonthFormula
@@ -14554,8 +14346,8 @@ series:
   calendar_month: 10
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_10
   is_derived: true
   source: CalendarMonthFormula
@@ -14570,8 +14362,8 @@ series:
   calendar_month: 11
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_11
   is_derived: true
   source: CalendarMonthFormula
@@ -14586,8 +14378,8 @@ series:
   calendar_month: 12
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_12
   is_derived: true
   source: CalendarMonthFormula
@@ -14602,8 +14394,8 @@ series:
   calendar_month: 1
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_01
   is_derived: true
   source: CalendarMonthFormula
@@ -14618,8 +14410,8 @@ series:
   calendar_month: 2
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_02
   is_derived: true
   source: CalendarMonthFormula
@@ -14634,8 +14426,8 @@ series:
   calendar_month: 3
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_03
   is_derived: true
   source: CalendarMonthFormula
@@ -14650,8 +14442,8 @@ series:
   calendar_month: 4
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_04
   is_derived: true
   source: CalendarMonthFormula
@@ -14666,8 +14458,8 @@ series:
   calendar_month: 5
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_05
   is_derived: true
   source: CalendarMonthFormula
@@ -14682,8 +14474,8 @@ series:
   calendar_month: 6
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_06
   is_derived: true
   source: CalendarMonthFormula
@@ -14698,8 +14490,8 @@ series:
   calendar_month: 7
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_07
   is_derived: true
   source: CalendarMonthFormula
@@ -14714,8 +14506,8 @@ series:
   calendar_month: 8
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_08
   is_derived: true
   source: CalendarMonthFormula
@@ -14730,8 +14522,8 @@ series:
   calendar_month: 9
   unit_native: USD/mt
   unit_normalized: USD/mt
-  unit_conversion: ''
-  unit_source: ''
+  unit_conversion: 原始为 USD/mt；未参与跨桶价价差时保留吨价。
+  unit_source: Reuters refined products quote convention
   ric: CAL_PROCNWE_09
   is_derived: true
   source: CalendarMonthFormula
@@ -14927,6 +14719,54 @@ series:
   ric: TC-YOS-SIN
   is_derived: false
   source: RHistory
+- series_id: voyage_rate_bbl_2a76bba285
+  display_name: Voyage Rate (BBL)
+  sheet: 成品油(国内汽柴表)
+  sector: Freight
+  product: Freight
+  region: Global
+  contract_month: ''
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters freight route convention
+  ric: ''
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: voyage_rate_bbl_e2b1487d04
+  display_name: Voyage Rate (BBL)
+  sheet: 成品油(国内汽柴表)
+  sector: Freight
+  product: Freight
+  region: Global
+  contract_month: ''
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters freight route convention
+  ric: ''
+  is_derived: false
+  source: RDP.HistoricalPricing
+- series_id: voyage_rate_bbl_f02a34e0b9
+  display_name: Voyage Rate (BBL)
+  sheet: 成品油(国内汽柴表)
+  sector: Freight
+  product: Freight
+  region: Global
+  contract_month: ''
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/bbl
+  unit_normalized: USD/bbl
+  unit_conversion: 原始已为 USD/bbl。
+  unit_source: Reuters freight route convention
+  ric: ''
+  is_derived: false
+  source: RDP.HistoricalPricing
 - series_id: tc_ams_nyc_49fb0cb56f
   display_name: Voyage Rate (BBL)
   sheet: 成品油(国外汽柴表)
