@@ -3,7 +3,11 @@ $ErrorActionPreference = "Stop"
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Port = 8522
 $Url = "http://localhost:$Port"
+$PreferredWorkbookName = "Nap_calendar_month_ultralight_formula.before-mopj-m3-fix-20260809-105658.xlsx"
+$WorkbookSearchRoot = Join-Path $env:USERPROFILE "Nutstore\1"
+$WorkbookPath = $null
 $VenvPython = Join-Path $ProjectDir ".venv\Scripts\python.exe"
+$DashboardScript = Join-Path $ProjectDir "src\nap_dashboard.py"
 $FallbackPython = "D:\Anacoda\python.exe"
 $Python = $VenvPython
 $OutputDir = Join-Path $ProjectDir "outputs"
@@ -51,13 +55,39 @@ function Get-NapPortProcess {
 try {
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
+    if ($env:NAP_DASHBOARD_WORKBOOK -and (Test-Path -LiteralPath $env:NAP_DASHBOARD_WORKBOOK)) {
+        $WorkbookPath = (Resolve-Path -LiteralPath $env:NAP_DASHBOARD_WORKBOOK).Path
+    } elseif (Test-Path -LiteralPath $WorkbookSearchRoot) {
+        $preferredPattern = Join-Path $WorkbookSearchRoot "*\NAP-*\$PreferredWorkbookName"
+        $WorkbookPath = Get-ChildItem -Path $preferredPattern -File -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+
+        if (-not $WorkbookPath) {
+            $fallbackPattern = Join-Path $WorkbookSearchRoot "*\NAP-*\Nap_calendar_month_ultralight_formula*.xlsx"
+            $WorkbookPath = Get-ChildItem -Path $fallbackPattern -File -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending |
+                Select-Object -First 1 -ExpandProperty FullName
+        }
+    }
+
+    if (-not $WorkbookPath -or -not (Test-Path -LiteralPath $WorkbookPath)) {
+        $message = "NAP source workbook was not found under:`n$WorkbookSearchRoot`nPreferred file: $PreferredWorkbookName"
+        Write-LauncherLog $message
+        Show-LauncherMessage $message
+        exit 1
+    }
+
+    # nap_dashboard.py reads this value as the default workbook shown in the sidebar.
+    # Start-Process inherits it, so the desktop shortcut always opens the audited source.
+    $env:NAP_DASHBOARD_WORKBOOK = $WorkbookPath
+
     $existingProcess = Get-NapPortProcess
     if ($existingProcess) {
-        $expectedPrefix = (Join-Path $ProjectDir ".venv").ToLowerInvariant()
         $existingExecutable = [string]$existingProcess.ExecutablePath
         $existingCommand = [string]$existingProcess.CommandLine
         $isNapDashboard = $existingCommand -like "*nap_dashboard.py*"
-        $usesProjectEnvironment = $existingExecutable.ToLowerInvariant().StartsWith($expectedPrefix) -or $existingCommand -like "*-m streamlit*"
+        $usesProjectEnvironment = $existingCommand -like "*$DashboardScript*"
         if ($isNapDashboard -and -not $usesProjectEnvironment) {
             $message = "Port $Port is occupied by an older NAP Dashboard running outside the project environment.`nClose that dashboard process, then start again."
             Write-LauncherLog "$message Executable: $existingExecutable"
@@ -83,10 +113,10 @@ try {
         }
     }
 
-    Write-LauncherLog "Starting Streamlit from $ProjectDir on port $Port using $Python -m streamlit."
+    Write-LauncherLog "Starting Streamlit from $ProjectDir on port $Port using $Python -m streamlit. Workbook: $WorkbookPath"
     Start-Process `
         -FilePath $Python `
-        -ArgumentList @("-m", "streamlit", "run", "src\nap_dashboard.py", "--server.port", "$Port", "--server.headless", "true", "--browser.gatherUsageStats", "false", "--server.fileWatcherType", "none", "--server.runOnSave", "false") `
+        -ArgumentList @("-m", "streamlit", "run", "$DashboardScript", "--server.port", "$Port", "--server.headless", "true", "--browser.gatherUsageStats", "false", "--server.fileWatcherType", "none", "--server.runOnSave", "false") `
         -WorkingDirectory $ProjectDir `
         -RedirectStandardOutput $StdoutLog `
         -RedirectStandardError $StderrLog `

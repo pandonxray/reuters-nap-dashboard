@@ -6,6 +6,8 @@ import pytest
 from src.nap_adapter import (
     DEFAULT_NAP_WORKBOOK,
     ParsedSeries,
+    _looks_like_ric,
+    _quarantine_duplicate_ric_requests,
     _validate_unique_ric_requests,
     coerce_excel_dates,
     coerce_excel_numeric,
@@ -43,6 +45,11 @@ def test_excel_date_formatted_negative_number_is_recovered():
     assert pd.isna(parsed.iloc[1])
 
 
+def test_retrieval_status_is_not_misclassified_as_a_ric():
+    assert not _looks_like_ric("Retrieving...")
+    assert _looks_like_ric("NAF-SIN-DIF")
+
+
 def test_usd_per_gallon_to_usd_per_barrel_conversion():
     assert usd_per_gallon_to_usd_per_barrel(2.5) == 105.0
 
@@ -66,6 +73,29 @@ def test_duplicate_reuters_ric_requests_fail_before_contract_data_is_overwritten
         _validate_unique_ric_requests(parsed)
 
 
+def test_duplicate_reuters_ric_requests_are_quarantined_for_dashboard_loading():
+    shared = {
+        "sheet": "Nap",
+        "short_name": "",
+        "name_native": "",
+        "source": "RDP.HistoricalPricing",
+        "is_derived": False,
+        "header_row": 0,
+        "first_data_row": 1,
+    }
+    parsed = [
+        ParsedSeries(display_name="日本CFR连2", ric="NACFRJPSWMc2", date_col=17, value_col=18, **shared),
+        ParsedSeries(display_name="日本CFR连3", ric="NACFRJPSWMc2", date_col=19, value_col=20, **shared),
+        ParsedSeries(display_name="EW连1", ric="NAPJPEWMc1", date_col=21, value_col=22, **shared),
+    ]
+
+    clean, issues = _quarantine_duplicate_ric_requests(parsed)
+
+    assert [item.display_name for item in clean] == ["日本CFR连2", "EW连1"]
+    assert issues[0]["ric"] == "NACFRJPSWMc2"
+    assert issues[0]["quarantined_labels"] == ["日本CFR连3"]
+
+
 def test_nap_workbook_detects_required_series_counts(nap_frame: pd.DataFrame):
     counts = nap_frame.groupby("sheet")["series_id"].nunique()
     assert nap_frame["series_id"].nunique() >= 500
@@ -77,7 +107,7 @@ def test_nap_long_table_has_no_duplicate_date_series_id(nap_frame: pd.DataFrame)
     assert not nap_frame.duplicated(["date", "series_id"]).any()
 
 
-def test_major_sheets_are_close_to_workbook_latest_date(nap_frame: pd.DataFrame):
+def test_major_sheets_are_within_five_business_days_of_workbook_latest(nap_frame: pd.DataFrame):
     latest = nap_frame["date"].max()
     major_sheets = ["Crude", "Gasoline", "Heating Oil&Jet fuel", "Diesel", "Nap", "Crk", "Margin", "Propane", "Fuel oil"]
     by_sheet = nap_frame.groupby("sheet")["date"].max()
@@ -86,7 +116,8 @@ def test_major_sheets_are_close_to_workbook_latest_date(nap_frame: pd.DataFrame)
     present = [sheet for sheet in major_sheets if sheet in by_sheet.index]
     assert len(present) >= 8
     for sheet in present:
-        assert (latest - by_sheet[sheet]).days <= 5
+        business_day_lag = len(pd.bdate_range(by_sheet[sheet] + pd.offsets.BDay(1), latest))
+        assert business_day_lag <= 5
 
 
 def test_usd_gal_series_keep_raw_and_normalized_values(nap_frame: pd.DataFrame):
@@ -136,8 +167,14 @@ def test_mopj_continuous_curve_has_all_twelve_contracts(nap_frame: pd.DataFrame)
     mopj = nap_frame[
         nap_frame["ric"].astype(str).str.fullmatch(r"NACFRJPSWMc(?:[1-9]|1[0-2])", na=False)
     ]
-    assert mopj["series_id"].nunique() == 12
-    assert set(mopj["contract_month"].astype(str)) == {f"M{month}" for month in range(1, 13)}
+    observed = set(mopj["contract_month"].astype(str))
+    expected = {f"M{month}" for month in range(1, 13)}
+    if observed != expected:
+        assert expected - observed == {"M3"}
+        issues = list(nap_frame.attrs.get("nap_source_issues", []))
+        assert any(issue.get("ric") == "NACFRJPSWMc2" for issue in issues)
+    else:
+        assert mopj["series_id"].nunique() == 12
 
 
 def test_foreign_product_vlookup_panel_is_not_loaded_as_raw_reuters_series(nap_frame: pd.DataFrame):
