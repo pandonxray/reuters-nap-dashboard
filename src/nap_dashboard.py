@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import hashlib
+import os
 import re
 import shutil
 import sys
@@ -39,9 +40,11 @@ try:
     from .nap_adapter import (
         CACHE_SCHEMA_VERSION,
         DEFAULT_NAP_WORKBOOK,
+        _continuous_ric_base,
         default_cache_path,
         default_catalog_path,
         default_explanations_path,
+        inspect_workbook_request_issues,
         load_nap_timeseries,
         workbook_status,
     )
@@ -85,9 +88,11 @@ except ImportError:
     from src.nap_adapter import (
         CACHE_SCHEMA_VERSION,
         DEFAULT_NAP_WORKBOOK,
+        _continuous_ric_base,
         default_cache_path,
         default_catalog_path,
         default_explanations_path,
+        inspect_workbook_request_issues,
         load_nap_timeseries,
         workbook_status,
     )
@@ -724,7 +729,12 @@ def _lookup_explanation(explanations: dict, series_id: str, meta: pd.Series | di
 @st.cache_resource(show_spinner=False)
 def _cached_load(workbook_path: str, cache_path: str, catalog_path: str, refresh_token: int, workbook_signature: str) -> pd.DataFrame:
     frame = load_nap_timeseries(workbook_path, cache_path=cache_path, catalog_path=catalog_path, refresh=refresh_token > 0)
-    return _optimize_frame_memory(frame)
+    source_issues = list(frame.attrs.get("nap_source_issues", []))
+    if "nap_source_issues" not in frame.attrs:
+        source_issues = inspect_workbook_request_issues(workbook_path)
+    optimized = _optimize_frame_memory(frame)
+    optimized.attrs["nap_source_issues"] = source_issues
+    return optimized
 
 
 def _optimize_frame_memory(df: pd.DataFrame) -> pd.DataFrame:
@@ -849,6 +859,22 @@ def _filter_term_view(df: pd.DataFrame, term_mode: str, calendar_months: list[in
     return df[df["term_type"].astype("string").fillna("continuous").ne("calendar")]
 
 
+def _exclude_future_rows(df: pd.DataFrame, today: pd.Timestamp | None = None) -> pd.DataFrame:
+    """Keep future-dated source rows visible to health checks but out of analytics."""
+    if df.empty or "date" not in df.columns:
+        return df
+    cutoff = pd.Timestamp.now().normalize() if today is None else pd.Timestamp(today).normalize()
+    dates = pd.to_datetime(df["date"], errors="coerce").dt.normalize()
+    future_mask = dates.gt(cutoff)
+    if not future_mask.any():
+        return df
+    out = df.loc[~future_mask].copy(deep=False)
+    out.attrs.update(df.attrs)
+    out.attrs["nap_excluded_future_rows"] = int(future_mask.sum())
+    out.attrs["nap_excluded_future_dates"] = int(dates[future_mask].nunique())
+    return out
+
+
 def _sidebar() -> dict[str, object]:
     st.sidebar.markdown("### Reuters NAP 交易看板")
     if not ARROW_RENDER_AVAILABLE:
@@ -913,7 +939,10 @@ def _sidebar() -> dict[str, object]:
             help="可拖入 Nap.xlsx 或 Nap_calendar_month_ultralight_formula.xlsx；系统会按文件内容生成专属缓存，不会复用旧 workbook 的缓存。",
         )
         uploaded_path, uploaded_digest = _persist_uploaded_workbook(uploaded)
-        workbook_input = st.text_input("或输入 NAP Excel 路径", value=str(DEFAULT_NAP_WORKBOOK))
+        workbook_input = st.text_input(
+            "或输入 NAP Excel 路径",
+            value=os.getenv("NAP_DASHBOARD_WORKBOOK", str(DEFAULT_NAP_WORKBOOK)),
+        )
         workbook_path = uploaded_path or workbook_input
         signature = _workbook_signature(workbook_path)
         cache_path = _signature_cache_path(default_cache_path(), signature)
@@ -947,9 +976,116 @@ def _sidebar() -> dict[str, object]:
     }
 
 
+def _expected_latest_business_day(as_of: pd.Timestamp | None = None) -> pd.Timestamp:
+    """Return the latest weekday that should reasonably have a completed close."""
+    moment = pd.Timestamp.now() if as_of is None else pd.Timestamp(as_of)
+    day = moment.normalize()
+    if day.weekday() >= 5:
+        return (day - pd.offsets.BDay(1)).normalize()
+    if moment.hour < 18:
+        return (day - pd.offsets.BDay(1)).normalize()
+    return day
+
+
+def _business_day_lag(latest: object, expected: object) -> int | None:
+    latest_ts = pd.to_datetime(latest, errors="coerce")
+    expected_ts = pd.to_datetime(expected, errors="coerce")
+    if pd.isna(latest_ts) or pd.isna(expected_ts):
+        return None
+    latest_day = pd.Timestamp(latest_ts).normalize()
+    expected_day = pd.Timestamp(expected_ts).normalize()
+    if latest_day >= expected_day:
+        return 0
+    return int(np.busday_count(latest_day.date(), expected_day.date()))
+
+
+def _missing_business_dates(latest: object, expected: object, limit: int = 10) -> list[pd.Timestamp]:
+    latest_ts = pd.to_datetime(latest, errors="coerce")
+    expected_ts = pd.to_datetime(expected, errors="coerce")
+    if pd.isna(latest_ts) or pd.isna(expected_ts):
+        return []
+    dates = pd.bdate_range(pd.Timestamp(latest_ts).normalize() + pd.offsets.BDay(1), pd.Timestamp(expected_ts).normalize())
+    return [pd.Timestamp(value).normalize() for value in dates[:limit]]
+
+
+def _freshness_summary(latest: object, as_of: pd.Timestamp | None = None) -> dict[str, object]:
+    expected = _expected_latest_business_day(as_of)
+    lag = _business_day_lag(latest, expected)
+    return {
+        "expected": expected,
+        "lag_business_days": lag,
+        "missing_dates": _missing_business_dates(latest, expected),
+    }
+
+
+def _series_freshness_frame(df: pd.DataFrame, as_of: pd.Timestamp | None = None) -> pd.DataFrame:
+    columns = ["板块", "工作表", "品种", "地区", "序列", "RIC", "最后日期", "滞后工作日", "预计日期"]
+    if df.empty:
+        return pd.DataFrame(columns=columns)
+    expected = _expected_latest_business_day(as_of)
+    stats = (
+        df.groupby("series_id", observed=True)
+        .agg(
+            最后日期=("date", "max"),
+            display_name=("display_name", "first"),
+            sheet=("sheet", "first"),
+            sector=("sector", "first"),
+            product=("product", "first"),
+            region=("region", "first"),
+            ric=("ric", "first"),
+        )
+        .reset_index()
+    )
+    stats["滞后工作日"] = [
+        _business_day_lag(value, expected) for value in pd.to_datetime(stats["最后日期"], errors="coerce")
+    ]
+    stats = stats[pd.to_numeric(stats["滞后工作日"], errors="coerce").gt(0)].copy()
+    stats["板块"] = stats["sector"].map(_sector_label)
+    stats["预计日期"] = expected
+    stats = stats.rename(
+        columns={"display_name": "序列", "sheet": "工作表", "product": "品种", "region": "地区", "ric": "RIC"}
+    )
+    return stats[columns].sort_values(["滞后工作日", "工作表", "序列"], ascending=[False, True, True])
+
+
+def _render_view_data_quality_banner(df: pd.DataFrame) -> None:
+    stale = _series_freshness_frame(df)
+    if stale.empty:
+        return
+    preview = "；".join(
+        f"{row['序列']}（{pd.Timestamp(row['最后日期']):%Y-%m-%d}，滞后 {int(row['滞后工作日'])} 日）"
+        for _, row in stale.head(5).iterrows()
+    )
+    suffix = f"；另有 {len(stale) - 5} 条" if len(stale) > 5 else ""
+    st.warning(f"当前视图有 {len(stale)} 条序列未到预计最新工作日：{preview}{suffix}。完整明细见“数据健康”。")
+    with st.expander("查看当前视图数据缺口", expanded=False):
+        _safe_dataframe(stale.head(300), use_container_width=True, hide_index=True)
+
+
+def _render_series_freshness_notice(series: pd.Series, label: str) -> None:
+    latest = pd.to_datetime(series.index, errors="coerce").max() if not series.empty else pd.NaT
+    freshness = _freshness_summary(latest)
+    lag = freshness["lag_business_days"]
+    if lag is None:
+        st.error(f"{label} 没有可用日期，无法生成可靠的季节图。")
+        return
+    if int(lag) <= 0:
+        return
+    missing = ", ".join(pd.Timestamp(value).strftime("%m-%d") for value in freshness["missing_dates"])
+    missing_note = f"；缺少工作日 {missing}" if missing else ""
+    st.warning(
+        f"当前序列未更新到最新可用工作日：最后数据 {pd.Timestamp(latest):%Y-%m-%d}，"
+        f"预计至少到 {pd.Timestamp(freshness['expected']):%Y-%m-%d}，滞后 {int(lag)} 个工作日{missing_note}。"
+        "请检查对应 RIC、LSEG 公式回填或重新解析当前 Excel。"
+    )
+
+
 def _render_topbar(df: pd.DataFrame, workbook_path: str) -> None:
     status = workbook_status(df, workbook_path)
-    latest = status["latest_trade_date"]
+    raw_latest = status["latest_trade_date"]
+    today = pd.Timestamp.now().normalize()
+    dates = pd.to_datetime(df.get("date"), errors="coerce")
+    latest = dates[dates.dt.normalize().le(today)].max() if not dates.empty else pd.NaT
     mtime = status["workbook_mtime"]
     mtime_text = f"{mtime:%Y-%m-%d %H:%M}" if pd.notna(mtime) else "-"
     latest_text = f"{latest:%Y-%m-%d}" if pd.notna(latest) else "-"
@@ -961,18 +1097,33 @@ def _render_topbar(df: pd.DataFrame, workbook_path: str) -> None:
             <div class="nap-brand-title">NAP 多品种交易研究看板</div>
           </div>
           <div class="nap-status"><div class="nap-status-label">数据更新时间</div><div class="nap-status-value">{mtime_text}</div></div>
-          <div class="nap-status"><div class="nap-status-label">最新交易日</div><div class="nap-status-value">{latest_text}</div></div>
+          <div class="nap-status"><div class="nap-status-label">最新有效日</div><div class="nap-status-value">{latest_text}</div></div>
           <div class="nap-status"><div class="nap-status-label">序列数</div><div class="nap-status-value">{status["series_count"]:,}</div></div>
           <div class="nap-status"><div class="nap-status-label">数据行数</div><div class="nap-status-value">{status["row_count"]:,}</div></div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    today = pd.Timestamp.now().normalize()
-    if pd.notna(latest) and pd.Timestamp(latest).normalize() > today:
+    if pd.notna(raw_latest) and pd.Timestamp(raw_latest).normalize() > today:
         st.error(
-            f"数据日期异常：最新交易日 {latest_text} 晚于本机日期 {today:%Y-%m-%d}。"
-            "请检查 Excel 日期列、时区或公式区域后再使用最新信号。"
+            f"数据日期异常：源表最大交易日 {pd.Timestamp(raw_latest):%Y-%m-%d} 晚于本机日期 {today:%Y-%m-%d}。"
+            "未来日期已从行情、图表和风险计算中排除，但仍保留在“数据健康”中供核对。"
+        )
+    freshness = _freshness_summary(latest)
+    if freshness["lag_business_days"] is not None and int(freshness["lag_business_days"]) > 0:
+        missing = ", ".join(pd.Timestamp(value).strftime("%m-%d") for value in freshness["missing_dates"])
+        missing_note = f"，缺少 {missing}" if missing else ""
+        st.warning(
+            f"全库行情可能未更新完整：最新交易日 {latest_text}，预计至少到 "
+            f"{pd.Timestamp(freshness['expected']):%Y-%m-%d}，滞后 {int(freshness['lag_business_days'])} 个工作日"
+            f"{missing_note}。工作日判断未扣除交易所节假日，请结合市场休市日核对。"
+        )
+    source_issues = list(df.attrs.get("nap_source_issues", []))
+    if source_issues:
+        details = "；".join(str(issue.get("message") or issue) for issue in source_issues[:3])
+        st.error(
+            f"源 Excel 公式请求存在 {len(source_issues)} 处冲突：{details}"
+            " 冲突序列已隔离，其他有效序列继续加载；请修正源单元格并完成一次 LSEG 刷新。"
         )
 
 
@@ -1196,7 +1347,7 @@ def _build_converted_spread(
             " / ".join(sorted(unique_units)),
             ["各腿换算后的单位不一致，不能直接相加减。请选择 USD/bbl，或调整所选序列。"],
         )
-    aligned = pd.concat(converted_legs, axis=1).dropna()
+    aligned = pd.concat(converted_legs, axis=1, sort=True).dropna()
     if aligned.empty:
         return pd.Series(dtype=float), next(iter(unique_units), ""), formulas
     spread = sum(aligned.iloc[:, idx] * weights[idx] for idx in range(len(weights)))
@@ -1917,7 +2068,7 @@ def render_market_map(df: pd.DataFrame, unit_mode: str, unit_factors: dict[str, 
         summary[0].metric("M1/M2 曲线", f"{len(filtered_core):,}")
         summary[1].metric("现货升水 / 远期升水", f"{backwardation} / {contango}")
         summary[2].metric("最极端结构 Z60", _fmt(extreme_z))
-        summary[3].metric("共同数据日", latest_date.strftime("%Y-%m-%d") if pd.notna(latest_date) else "-")
+        summary[3].metric("最新有效日", latest_date.strftime("%Y-%m-%d") if pd.notna(latest_date) else "-")
 
         _render_core_market_matrix(filtered_core.reset_index(drop=True), include_far_structure)
         _download_csv("下载结构矩阵 CSV", filtered_core, "nap_core_market_matrix.csv", "download_core_market_matrix")
@@ -2066,6 +2217,7 @@ def render_seasonality(df: pd.DataFrame, unit_mode: str, unit_factors: dict[str,
     meta = catalog.set_index("series_id").loc[series_id]
     raw_series = _series_from_wide(wide, series_id)
     series, display_unit, _ = convert_quote_values(raw_series, meta, unit_mode, unit_factors)
+    _render_series_freshness_notice(series, str(meta.get("display_name") or series_id))
     if remove_leap:
         series = remove_feb29(series.to_frame("value"))["value"]
     if lunar and str(meta.get("region")) != "China":
@@ -3493,6 +3645,7 @@ def render_freight_arbitrage(df: pd.DataFrame) -> None:
             _series_from_wide(wide, route_id).rename("运费"),
         ],
         axis=1,
+        sort=True,
     ).dropna()
     if aligned.empty:
         st.warning("起点、终点和运费三条序列没有重叠日期，请调整选择或检查报价频率。")
@@ -3515,27 +3668,101 @@ def render_freight_arbitrage(df: pd.DataFrame) -> None:
     _download_csv("下载套利序列 CSV", aligned, "nap_freight_adjusted_arbitrage.csv", "download_arbitrage")
 
 
-def _build_data_health(df: pd.DataFrame) -> dict[str, object]:
+def _contract_curve_gaps(catalog: pd.DataFrame) -> pd.DataFrame:
+    columns = ["工作表", "板块", "品种", "地区", "RIC族", "已有合约", "缺少合约"]
+    if catalog.empty or "ric" not in catalog.columns:
+        return pd.DataFrame(columns=columns)
+    curves = catalog.copy()
+    term = curves.get("term_type", pd.Series("continuous", index=curves.index)).astype("string").fillna("continuous")
+    curves = curves[term.ne("calendar")]
+    curves["month_num"] = pd.to_numeric(
+        curves.get("contract_month", pd.Series("", index=curves.index)).astype("string").str.extract(r"(?i)^M(\d{1,2})$")[0],
+        errors="coerce",
+    )
+    curves["ric_base"] = curves["ric"].astype("string").fillna("").map(_continuous_ric_base)
+    curves = curves[curves["month_num"].between(1, 12, inclusive="both") & curves["ric_base"].astype(bool)]
+    rows: list[dict[str, object]] = []
+    for (sheet, ric_base), group in curves.groupby(["sheet", "ric_base"], observed=True, dropna=False):
+        months = sorted(set(pd.to_numeric(group["month_num"], errors="coerce").dropna().astype(int)))
+        if 1 not in months or len(months) < 6 or max(months, default=0) < 10:
+            continue
+        missing = sorted(set(range(1, 13)) - set(months))
+        if not missing:
+            continue
+        first = group.iloc[0]
+        rows.append(
+            {
+                "工作表": sheet,
+                "板块": _sector_label(first.get("sector", "")),
+                "品种": first.get("product", ""),
+                "地区": first.get("region", ""),
+                "RIC族": ric_base,
+                "已有合约": ", ".join(f"M{month}" for month in months),
+                "缺少合约": ", ".join(f"M{month}" for month in missing),
+            }
+        )
+    return pd.DataFrame(rows, columns=columns)
+
+
+def _build_data_health(df: pd.DataFrame, as_of: pd.Timestamp | None = None) -> dict[str, object]:
     base = df
     if "term_type" in base.columns:
         base = base[base["term_type"].astype("string").fillna("continuous").ne("calendar")]
     catalog = catalog_with_labels(base)
     dates = pd.to_datetime(base["date"], errors="coerce")
-    latest = dates.max()
-    today = pd.Timestamp.now().normalize()
+    moment = pd.Timestamp.now() if as_of is None else pd.Timestamp(as_of)
+    today = moment.normalize()
     future_mask = dates.dt.normalize().gt(today)
     future_dates = int(dates[future_mask].dt.normalize().nunique())
     future_rows = int(future_mask.sum())
+    raw_latest = dates.max()
+    valid_base = base.loc[~future_mask].copy(deep=False)
+    valid_dates = pd.to_datetime(valid_base["date"], errors="coerce")
+    latest = valid_dates.max()
     duplicate_rows = int(base.duplicated(["date", "series_id"]).sum())
 
-    series_stats = (
-        base.groupby("series_id", observed=True)
+    observed_stats = (
+        valid_base.groupby("series_id", observed=True)
         .agg(起始日期=("date", "min"), 最新日期=("date", "max"), 观测数=("value", "count"))
         .reset_index()
     )
     meta_columns = ["series_id", "display_name", "sheet", "sector", "product", "region", "unit_native", "ric"]
-    series_stats = series_stats.merge(catalog[meta_columns], on="series_id", how="left")
+    series_stats = catalog[meta_columns].merge(observed_stats, on="series_id", how="left")
+    future_by_series = base.loc[future_mask].groupby("series_id", observed=True).size()
+    series_stats["未来行数"] = series_stats["series_id"].map(future_by_series).fillna(0).astype(int)
     series_stats["滞后天数"] = (latest - pd.to_datetime(series_stats["最新日期"], errors="coerce")).dt.days
+    expected_latest = _expected_latest_business_day(as_of)
+    normalized_dates = valid_dates.dt.normalize()
+    coverage = (
+        valid_base.assign(_normalized_date=normalized_dates)
+        .loc[lambda frame: frame["_normalized_date"].le(expected_latest) & frame["_normalized_date"].dt.weekday.lt(5)]
+        .groupby("_normalized_date", observed=True)["series_id"]
+        .nunique()
+    )
+    coverage_floor = max(10, int(np.ceil(max(int(catalog["series_id"].nunique()), 1) * 0.25)))
+    trade_dates = pd.DatetimeIndex(coverage[coverage.ge(coverage_floor)].index).sort_values()
+    if trade_dates.empty:
+        trade_dates = pd.DatetimeIndex(normalized_dates.dropna().loc[normalized_dates.le(expected_latest)].unique()).sort_values()
+    latest_by_series = pd.to_datetime(series_stats["最新日期"], errors="coerce").dt.normalize()
+    series_stats["相对全库滞后交易日"] = [
+        int((trade_dates > value).sum()) if pd.notna(value) else len(trade_dates)
+        for value in latest_by_series
+    ]
+    series_stats["距应有日期工作日"] = [
+        _business_day_lag(value, expected_latest) for value in latest_by_series
+    ]
+    recent_dates = trade_dates[-10:]
+    recent = valid_base[valid_dates.dt.normalize().isin(recent_dates)][["series_id", "date"]].copy()
+    recent["date"] = pd.to_datetime(recent["date"], errors="coerce").dt.normalize()
+    seen = recent.groupby("series_id", observed=True)["date"].agg(lambda values: set(values.dropna()))
+    recent_missing: dict[str, list[pd.Timestamp]] = {}
+    for series_id in series_stats["series_id"].astype(str):
+        missing_dates = [pd.Timestamp(value) for value in recent_dates if pd.Timestamp(value) not in seen.get(series_id, set())]
+        recent_missing[series_id] = missing_dates
+    series_stats["近期缺失数"] = series_stats["series_id"].astype(str).map(lambda value: len(recent_missing.get(value, [])))
+    series_stats["近期缺失日期"] = series_stats["series_id"].astype(str).map(
+        lambda value: ", ".join(date.strftime("%m-%d") for date in recent_missing.get(value, []))
+    )
     series_stats["板块"] = series_stats["sector"].map(_sector_label)
     unit_text = series_stats["unit_native"].astype("string").fillna("").str.strip()
     ric_text = series_stats["ric"].astype("string").fillna("").str.strip()
@@ -3543,7 +3770,7 @@ def _build_data_health(df: pd.DataFrame) -> dict[str, object]:
     series_stats["RIC状态"] = np.where(ric_text.eq(""), "缺失", "完整")
 
     sheet_stats = (
-        base.groupby("sheet", observed=True)
+        valid_base.groupby("sheet", observed=True)
         .agg(
             序列数=("series_id", "nunique"),
             数据行数=("series_id", "size"),
@@ -3553,32 +3780,42 @@ def _build_data_health(df: pd.DataFrame) -> dict[str, object]:
         .reset_index()
         .rename(columns={"sheet": "工作表"})
     )
-    sheet_stats["距全库最新天数"] = (latest - pd.to_datetime(sheet_stats["最新日期"], errors="coerce")).dt.days
-    sheet_stats = sheet_stats.sort_values(["距全库最新天数", "工作表"])
+    future_by_sheet = base.loc[future_mask].groupby("sheet", observed=True).size()
+    sheet_stats["未来行数"] = sheet_stats["工作表"].map(future_by_sheet).fillna(0).astype(int)
+    sheet_stats["距应有日期工作日"] = [
+        _business_day_lag(value, expected_latest)
+        for value in pd.to_datetime(sheet_stats["最新日期"], errors="coerce")
+    ]
+    sheet_stats = sheet_stats.sort_values(["距应有日期工作日", "工作表"], ascending=[False, True])
 
     sheet_counts = catalog.groupby("sheet", observed=True)["series_id"].nunique()
+    curve_gaps = _contract_curve_gaps(catalog)
+    source_issues = list(df.attrs.get("nap_source_issues", []))
+    latest_completed = trade_dates.max() if len(trade_dates) else latest
+    dataset_business_lag = _business_day_lag(latest_completed, expected_latest)
     checks = pd.DataFrame(
         [
-            {"检查项": "连续月原始序列", "当前值": int(catalog["series_id"].nunique()), "验收线": ">= 500"},
-            {"检查项": "Crude 工作表序列", "当前值": int(sheet_counts.get("Crude", 0)), "验收线": ">= 150"},
-            {"检查项": "Crk 工作表序列", "当前值": int(sheet_counts.get("Crk", 0)), "验收线": ">= 100"},
-            {"检查项": "重复(date, series_id)", "当前值": duplicate_rows, "验收线": "= 0"},
-            {"检查项": "未来日期", "当前值": future_dates, "验收线": "= 0"},
+            {"检查项": "连续月原始序列", "当前值": int(catalog["series_id"].nunique()), "验收线": ">= 500", "结果": "通过" if int(catalog["series_id"].nunique()) >= 500 else "关注"},
+            {"检查项": "Crude 工作表序列", "当前值": int(sheet_counts.get("Crude", 0)), "验收线": ">= 150", "结果": "通过" if int(sheet_counts.get("Crude", 0)) >= 150 else "关注"},
+            {"检查项": "Crk 工作表序列", "当前值": int(sheet_counts.get("Crk", 0)), "验收线": ">= 100", "结果": "通过" if int(sheet_counts.get("Crk", 0)) >= 100 else "关注"},
+            {"检查项": "重复(date, series_id)", "当前值": duplicate_rows, "验收线": "= 0", "结果": "通过" if duplicate_rows == 0 else "异常"},
+            {"检查项": "未来日期", "当前值": future_dates, "验收线": "= 0", "结果": "通过" if future_dates == 0 else "异常"},
+            {"检查项": "距应有最新工作日", "当前值": dataset_business_lag if dataset_business_lag is not None else "-", "验收线": "= 0", "结果": "通过" if dataset_business_lag == 0 else "关注"},
+            {"检查项": "连续月曲线缺口", "当前值": len(curve_gaps), "验收线": "= 0", "结果": "通过" if curve_gaps.empty else "异常"},
+            {"检查项": "源公式请求冲突", "当前值": len(source_issues), "验收线": "= 0", "结果": "通过" if not source_issues else "异常"},
         ]
     )
-    checks["结果"] = [
-        "通过" if checks.iloc[0]["当前值"] >= 500 else "关注",
-        "通过" if checks.iloc[1]["当前值"] >= 150 else "关注",
-        "通过" if checks.iloc[2]["当前值"] >= 100 else "关注",
-        "通过" if duplicate_rows == 0 else "异常",
-        "通过" if future_dates == 0 else "异常",
-    ]
     return {
         "latest": latest,
+        "raw_latest": raw_latest,
+        "expected_latest": expected_latest,
+        "dataset_business_lag": dataset_business_lag,
         "catalog": catalog,
         "series": series_stats,
         "sheets": sheet_stats,
         "checks": checks,
+        "curve_gaps": curve_gaps,
+        "source_issues": source_issues,
         "duplicates": duplicate_rows,
         "future_dates": future_dates,
         "future_rows": future_rows,
@@ -3589,7 +3826,7 @@ def render_data_health(df: pd.DataFrame) -> None:
     health = _cached_view(df, "data_health", lambda: _build_data_health(df))
     catalog = health["catalog"]
     series_stats = health["series"]
-    stale = series_stats[pd.to_numeric(series_stats["滞后天数"], errors="coerce") > 7]
+    stale = series_stats[pd.to_numeric(series_stats["相对全库滞后交易日"], errors="coerce") > 0]
     unit_missing = int(series_stats["单位状态"].eq("缺失").sum())
     latest = health["latest"]
 
@@ -3599,15 +3836,25 @@ def render_data_health(df: pd.DataFrame) -> None:
     )
     metrics = st.columns(5)
     metrics[0].metric("连续月序列", f"{len(catalog):,}")
-    metrics[1].metric("最新交易日", latest.strftime("%Y-%m-%d") if pd.notna(latest) else "-")
+    metrics[1].metric("最新有效日", latest.strftime("%Y-%m-%d") if pd.notna(latest) else "-")
     metrics[2].metric("未来日期", f"{int(health['future_dates']):,}")
-    metrics[3].metric("滞后超过7天", f"{len(stale):,}")
+    metrics[3].metric("落后全库序列", f"{len(stale):,}")
     metrics[4].metric("缺单位 / 重复键", f"{unit_missing:,} / {int(health['duplicates']):,}")
+
+    if health["dataset_business_lag"] is not None and int(health["dataset_business_lag"]) > 0:
+        st.warning(
+            f"全库最新交易日 {pd.Timestamp(latest):%Y-%m-%d}，预计至少到 "
+            f"{pd.Timestamp(health['expected_latest']):%Y-%m-%d}，滞后 {int(health['dataset_business_lag'])} 个工作日。"
+        )
+
+    source_issues = list(health["source_issues"])
+    if source_issues:
+        st.error("；".join(str(issue.get("message") or issue) for issue in source_issues))
 
     if int(health["future_dates"]) > 0:
         st.error(
             f"发现 {int(health['future_dates'])} 个未来交易日、{int(health['future_rows']):,} 行记录。"
-            "这些记录会影响最新值、Z-score、结构与风险结果，请先核对日期来源。"
+            "这些记录已从行情、图表和风险计算中排除，仍请核对日期来源。"
         )
 
     left, right = st.columns([0.8, 1.2])
@@ -3618,16 +3865,46 @@ def render_data_health(df: pd.DataFrame) -> None:
         st.markdown("#### 工作表更新状态")
         _safe_dataframe(health["sheets"], use_container_width=True, hide_index=True)
 
+    curve_gaps = health["curve_gaps"]
+    st.markdown("#### 连续月曲线缺口")
+    if curve_gaps.empty:
+        st.success("完整的 M1-M12 曲线未发现缺月。")
+    else:
+        st.error("发现连续月曲线缺口；相关自然月派生序列会因此整组缺失。")
+        _safe_dataframe(curve_gaps, use_container_width=True, hide_index=True)
+
     st.markdown("#### 需关注序列")
     attention = series_stats[
-        series_stats["滞后天数"].gt(7) | series_stats["单位状态"].eq("缺失") | series_stats["RIC状态"].eq("缺失")
+        series_stats["相对全库滞后交易日"].gt(0)
+        | series_stats["近期缺失数"].gt(0)
+        | series_stats["未来行数"].gt(0)
+        | series_stats["单位状态"].eq("缺失")
+        | series_stats["RIC状态"].eq("缺失")
     ].copy()
-    attention = attention.sort_values(["滞后天数", "sheet", "display_name"], ascending=[False, True, True])
+    attention = attention.sort_values(["相对全库滞后交易日", "近期缺失数", "sheet", "display_name"], ascending=[False, False, True, True])
     attention = attention.rename(
         columns={"display_name": "序列", "sheet": "工作表", "product": "品种", "region": "地区", "ric": "RIC"}
-    )[["板块", "品种", "地区", "序列", "RIC", "最新日期", "滞后天数", "观测数", "单位状态", "RIC状态", "工作表"]]
+    )[
+        [
+            "板块",
+            "品种",
+            "地区",
+            "序列",
+            "RIC",
+            "最新日期",
+            "相对全库滞后交易日",
+            "距应有日期工作日",
+            "近期缺失数",
+            "近期缺失日期",
+            "未来行数",
+            "观测数",
+            "单位状态",
+            "RIC状态",
+            "工作表",
+        ]
+    ]
     if attention.empty:
-        st.success("未发现滞后、单位缺失或 RIC 缺失的序列。")
+        st.success("未发现近期缺口、滞后、单位缺失或 RIC 缺失的序列。")
     else:
         _safe_dataframe(attention.head(300), use_container_width=True, hide_index=True)
         _download_csv("下载需关注序列 CSV", attention, "nap_data_health_attention.csv", "download_data_health")
@@ -3698,35 +3975,38 @@ def run_nap_dashboard() -> None:
     unit_mode = str(controls.get("display_unit_mode", "regional"))
     unit_factors = dict(controls.get("unit_factors", DEFAULT_BBL_PER_MT))
     raw_df.attrs["nap_view_key"] = f"{controls['workbook_signature']}|raw|{controls['refresh_token']}"
+    analysis_df = _exclude_future_rows(raw_df)
+    analysis_df.attrs["nap_view_key"] = f"{controls['workbook_signature']}|analysis|{controls['refresh_token']}"
     df = _filter_term_view(
-        raw_df,
+        analysis_df,
         str(controls.get("term_mode", "continuous")),
         list(controls.get("calendar_months", CALENDAR_MONTHS)),  # type: ignore[arg-type]
     )
     month_key = ",".join(str(month) for month in controls.get("calendar_months", CALENDAR_MONTHS))
     df.attrs["nap_view_key"] = (
-        f"{controls['workbook_signature']}|{controls.get('term_mode', 'continuous')}|{month_key}|{controls['refresh_token']}"
+        f"{controls['workbook_signature']}|nofuture|{controls.get('term_mode', 'continuous')}|{month_key}|{controls['refresh_token']}"
     )
     if df.empty:
         st.warning("当前查看模式下没有可用数据，请切换连续月/自然月模式，或重新解析当前 Excel。")
         return
 
-    _render_topbar(df, str(controls["workbook_path"]))
+    _render_topbar(raw_df, str(controls["workbook_path"]))
+    _render_view_data_quality_banner(df)
     explanations = _load_yaml(default_explanations_path())
     if page == "market":
         render_market_map(df, unit_mode, unit_factors)
     elif page == "detail":
-        detail_df = _append_continuous_crude(df, raw_df, str(controls.get("term_mode", "continuous")))
+        detail_df = _append_continuous_crude(df, analysis_df, str(controls.get("term_mode", "continuous")))
         render_series_detail(detail_df, explanations, unit_mode, unit_factors)
     elif page == "seasonality":
-        season_df = _append_continuous_crude(df, raw_df, str(controls.get("term_mode", "continuous")))
+        season_df = _append_continuous_crude(df, analysis_df, str(controls.get("term_mode", "continuous")))
         render_seasonality(season_df, unit_mode, unit_factors)
     elif page == "relationship":
         render_relationship_lab(df, unit_mode, unit_factors)
     elif page == "combos":
         render_combo_spreads(df, unit_mode, unit_factors)
     elif page == "weekly":
-        render_weekly_report(raw_df, unit_mode, unit_factors)
+        render_weekly_report(analysis_df, unit_mode, unit_factors)
     elif page == "curve":
         render_forward_curve(df, unit_mode, unit_factors)
     elif page == "risk":

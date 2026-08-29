@@ -12863,6 +12863,22 @@ series:
   ric: NACFRJPSWMc2
   is_derived: false
   source: RDP.HistoricalPricing
+- series_id: nap_nacfrjpswmc3_fab5d19446
+  display_name: 日本CFR连3
+  sheet: Nap
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: M3
+  term_type: continuous
+  calendar_month: ''
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: NACFRJPSWMc3
+  is_derived: false
+  source: RDP.HistoricalPricing
 - series_id: nap_nacfrjpswmc4_6045fe4d82
   display_name: 日本CFR连4
   sheet: Nap
@@ -13549,6 +13565,198 @@ series:
   unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
   unit_source: Naphtha outright quote convention plus dashboard barrel conversion
   ric: CAL_NAPCNWEA_09
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_10_d3ce6ea871
+  display_name: MOPJ 10月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 10
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_10
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_11_696ae8c3ef
+  display_name: MOPJ 11月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 11
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_11
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_12_d32758c9e4
+  display_name: MOPJ 12月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 12
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_12
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_01_ff443a7d84
+  display_name: MOPJ 1月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 1
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_01
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_02_a5b186ad7d
+  display_name: MOPJ 2月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 2
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_02
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_03_39bbb2940b
+  display_name: MOPJ 3月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 3
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_03
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_04_6f13850a11
+  display_name: MOPJ 4月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 4
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_04
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_05_ea48de01ef
+  display_name: MOPJ 5月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 5
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_05
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_06_78182a519f
+  display_name: MOPJ 6月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 6
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_06
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_07_6fae095481
+  display_name: MOPJ 7月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 7
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_07
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_08_5a012002eb
+  display_name: MOPJ 8月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 8
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_08
+  is_derived: true
+  source: CalendarMonthFormula
+- series_id: nap_cal_nacfrjp_09_6456328e53
+  display_name: MOPJ 9月
+  sheet: Nap_自然月
+  sector: Naphtha
+  product: Naphtha
+  region: Japan
+  contract_month: ''
+  term_type: calendar
+  calendar_month: 9
+  unit_native: USD/mt
+  unit_normalized: USD/bbl
+  unit_conversion: '石脑油: USD/mt ÷ 8.90 = USD/bbl。'
+  unit_source: Naphtha outright quote convention plus dashboard barrel conversion
+  ric: CAL_NACFRJP_09
   is_derived: true
   source: CalendarMonthFormula
 - series_id: nap_cal_napjpew_10_6135dc7b62

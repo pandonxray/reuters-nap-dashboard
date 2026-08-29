@@ -8,9 +8,12 @@ from src.nap_dashboard import (
     _build_converted_spread,
     _build_data_health,
     _complete_contract_curve,
+    _contract_curve_gaps,
     _continuous_month_mapping,
     _custom_structure_frame,
     _custom_spread_title,
+    _exclude_future_rows,
+    _freshness_summary,
     _market_contract_view,
     _optimize_frame_memory,
     _weekly_convert_panels,
@@ -114,7 +117,88 @@ def test_data_health_accepts_categorical_metadata_and_flags_future_dates():
         frame[column] = frame[column].astype("category")
     health = _build_data_health(frame)
     assert health["future_dates"] == 1
+    assert health["series"].iloc[0]["未来行数"] == 1
     assert health["series"].iloc[0]["RIC状态"] == "缺失"
+
+
+def test_future_rows_are_excluded_from_analytics_but_counted_in_attrs():
+    frame = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2026-08-14", "2026-08-17"]),
+            "series_id": ["a", "a"],
+            "value": [1.0, 2.0],
+        }
+    )
+    frame.attrs["nap_source_issues"] = [{"code": "test"}]
+
+    filtered = _exclude_future_rows(frame, today=pd.Timestamp("2026-08-16"))
+
+    assert filtered["date"].tolist() == [pd.Timestamp("2026-08-14")]
+    assert filtered.attrs["nap_excluded_future_rows"] == 1
+    assert filtered.attrs["nap_source_issues"] == [{"code": "test"}]
+
+
+def test_data_health_uses_latest_valid_date_when_source_contains_future_rows():
+    frame = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2026-08-14", "2026-08-17"]),
+            "series_id": ["a", "a"],
+            "display_name": ["A", "A"],
+            "sheet": ["Crude", "Crude"],
+            "sector": ["Crude", "Crude"],
+            "product": ["Brent", "Brent"],
+            "region": ["Global", "Global"],
+            "unit_native": ["USD/bbl", "USD/bbl"],
+            "unit_normalized": ["USD/bbl", "USD/bbl"],
+            "unit_conversion": ["none", "none"],
+            "unit_source": ["test", "test"],
+            "ric": ["LCOc1", "LCOc1"],
+            "term_type": ["continuous", "continuous"],
+            "contract_month": ["M1", "M1"],
+            "calendar_month": [None, None],
+            "is_derived": [False, False],
+            "source": ["test", "test"],
+            "name_native": ["A", "A"],
+            "short_name": ["A", "A"],
+            "value": [70.0, 71.0],
+        }
+    )
+
+    health = _build_data_health(frame, as_of=pd.Timestamp("2026-08-16 12:00"))
+
+    assert health["latest"] == pd.Timestamp("2026-08-14")
+    assert health["raw_latest"] == pd.Timestamp("2026-08-17")
+    assert health["series"].iloc[0]["未来行数"] == 1
+
+
+def test_freshness_summary_uses_latest_completed_weekday_on_weekends():
+    freshness = _freshness_summary(pd.Timestamp("2026-08-07"), as_of=pd.Timestamp("2026-08-16 12:00"))
+    assert freshness["expected"] == pd.Timestamp("2026-08-14")
+    assert freshness["lag_business_days"] == 5
+    assert freshness["missing_dates"] == list(pd.date_range("2026-08-10", "2026-08-14", freq="B"))
+
+
+def test_contract_curve_gaps_identify_missing_m3():
+    months = [1, 2, *range(4, 13)]
+    catalog = pd.DataFrame(
+        {
+            "series_id": [f"m{month}" for month in months],
+            "display_name": [f"MOPJ M{month}" for month in months],
+            "sheet": ["Nap"] * len(months),
+            "sector": ["Naphtha"] * len(months),
+            "product": ["MOPJ"] * len(months),
+            "region": ["Japan"] * len(months),
+            "contract_month": [f"M{month}" for month in months],
+            "term_type": ["continuous"] * len(months),
+            "ric": [f"NACFRJPSWMc{month}" for month in months],
+        }
+    )
+
+    gaps = _contract_curve_gaps(catalog)
+
+    assert len(gaps) == 1
+    assert gaps.iloc[0]["RIC族"] == "NACFRJP"
+    assert gaps.iloc[0]["缺少合约"] == "M3"
 
 
 def test_forward_curve_groups_keep_futures_and_swaps_separate():

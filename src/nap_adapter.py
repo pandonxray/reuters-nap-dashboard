@@ -22,7 +22,7 @@ NAPHTHA_BBLS_PER_METRIC_TON = 8.9
 EBOB_BBLS_PER_METRIC_TON = 8.33
 GASOIL_BBLS_PER_METRIC_TON = 7.45
 JET_BBLS_PER_METRIC_TON = 7.88
-CACHE_SCHEMA_VERSION = "2026-07-12-contract-month-v5"
+CACHE_SCHEMA_VERSION = "2026-08-16-source-quality-v6"
 DEFAULT_NAP_WORKBOOK = Path(
     r"C:\Users\74100\Nutstore\1\油气-djx-\NAP-丙烯-坚果云\Nap_calendar_month_ultralight_formula.xlsx"
 )
@@ -177,6 +177,129 @@ def _validate_unique_ric_requests(parsed_series: list[ParsedSeries]) -> None:
         + "; ".join(details)
         + ". Correct the workbook RIC input before parsing."
     )
+
+
+def _quarantine_duplicate_ric_requests(
+    parsed_series: list[ParsedSeries],
+) -> tuple[list[ParsedSeries], list[dict[str, Any]]]:
+    """Keep valid workbook series while isolating ambiguous duplicate RIC requests.
+
+    Reuters request metadata occasionally contains one mistyped continuation RIC. A
+    hard failure leaves the dashboard on an older cache even when every unrelated
+    series refreshed correctly. We keep the request whose visible contract label
+    agrees with the RIC (when there is one), quarantine the conflicting output, and
+    surface the exact gap through dashboard data-quality diagnostics.
+    """
+    by_identity: dict[tuple[str, str], list[ParsedSeries]] = {}
+    for parsed in parsed_series:
+        ric = str(parsed.ric or "").strip()
+        if ric:
+            by_identity.setdefault((parsed.sheet, ric), []).append(parsed)
+
+    keep: set[ParsedSeries] = set(parsed_series)
+    issues: list[dict[str, Any]] = []
+    for (sheet, ric), items in sorted(by_identity.items()):
+        if len(items) <= 1:
+            continue
+        ric_contract = _infer_contract_month("", ric)
+        matching = [
+            item
+            for item in items
+            if ric_contract and _infer_contract_month(item.display_name, "") == ric_contract
+        ]
+        selected = matching[0] if len(matching) == 1 else items[0]
+        quarantined = [item for item in items if item is not selected]
+        for item in quarantined:
+            keep.discard(item)
+        issues.append(
+            {
+                "severity": "high",
+                "code": "duplicate_ric_request",
+                "sheet": sheet,
+                "ric": ric,
+                "kept_label": selected.display_name or selected.short_name or "-",
+                "quarantined_labels": [item.display_name or item.short_name or "-" for item in quarantined],
+                "message": (
+                    f"{sheet} 工作表的 Reuters RIC {ric} 被多个序列重复请求；"
+                    f"保留 {selected.display_name or selected.short_name or '-'}，"
+                    f"隔离 {', '.join(item.display_name or item.short_name or '-' for item in quarantined)}。"
+                ),
+            }
+        )
+    return [item for item in parsed_series if item in keep], issues
+
+
+def inspect_workbook_request_issues(
+    workbook_path: str | Path = DEFAULT_NAP_WORKBOOK,
+    sheets: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Inspect lightweight Reuters request metadata without parsing cached values."""
+    workbook = Path(workbook_path)
+    if not workbook.exists():
+        return []
+    wb_formula = load_workbook(workbook, read_only=True, data_only=False)
+    target_sheets = sheets or [sheet for sheet in RELEVANT_SHEETS if sheet in wb_formula.sheetnames]
+    requests: list[dict[str, Any]] = []
+    try:
+        for sheet in target_sheets:
+            ws = wb_formula[sheet]
+            for _, _, source, formula_text in _top_reuters_formulas(ws):
+                if source == "RDP.HistoricalPricing":
+                    match = re.search(
+                        r'TEXTJOIN\(\s*";"\s*,\s*TRUE\s*,\s*\$?([A-Z]{1,3})\$?(\d+)\s*:\s*\$?\1\$?(\d+)\s*\)',
+                        formula_text,
+                        flags=re.IGNORECASE,
+                    )
+                    if not match:
+                        continue
+                    column = column_index_from_string(match.group(1))
+                    start_row, end_row = int(match.group(2)), int(match.group(3))
+                    for row in range(start_row, end_row + 1):
+                        ric = _clean_text(ws.cell(row, column).value)
+                        if not ric:
+                            continue
+                        label = _clean_text(ws.cell(row, column + 1).value)
+                        requests.append(
+                            {
+                                "sheet": sheet,
+                                "ric": ric,
+                                "label": label or ric,
+                                "cell": f"{match.group(1).upper()}{row}",
+                                "source": source,
+                            }
+                        )
+                elif source == "RHistory":
+                    for ric in _extract_ric_from_formula(formula_text):
+                        requests.append(
+                            {"sheet": sheet, "ric": ric, "label": ric, "cell": "", "source": source}
+                        )
+    finally:
+        wb_formula.close()
+
+    issues: list[dict[str, Any]] = []
+    request_frame = pd.DataFrame(requests)
+    if request_frame.empty:
+        return issues
+    for (sheet, ric), group in request_frame.groupby(["sheet", "ric"], sort=True, dropna=False):
+        if len(group) <= 1:
+            continue
+        labels = list(dict.fromkeys(group["label"].astype(str)))
+        cells = list(dict.fromkeys(group["cell"].astype(str)))
+        issues.append(
+            {
+                "severity": "high",
+                "code": "duplicate_ric_request",
+                "sheet": str(sheet),
+                "ric": str(ric),
+                "labels": labels,
+                "cells": [cell for cell in cells if cell],
+                "message": (
+                    f"{sheet} 工作表的 Reuters RIC {ric} 重复出现在 "
+                    f"{', '.join(cell for cell in cells if cell) or '公式请求'}；对应 {', '.join(labels)}。"
+                ),
+            }
+        )
+    return issues
 
 
 def project_root() -> Path:
@@ -527,6 +650,8 @@ def _candidate_meta_rows(df: pd.DataFrame, max_left_col0: int) -> list[int]:
 
 def _looks_like_ric(value: str) -> bool:
     if not value or any("\u4e00" <= char <= "\u9fff" for char in value):
+        return False
+    if _norm(value).strip(".") in {"retrieving", "loading", "refreshing", "notavailable"}:
         return False
     if " " in value or len(value) < 3 or len(value) > 40:
         return False
@@ -1207,6 +1332,7 @@ def parse_nap_workbook(
     wb_values = load_workbook(workbook, read_only=True, data_only=True)
     target_sheets = sheets or [sheet for sheet in RELEVANT_SHEETS if sheet in wb_values.sheetnames]
     all_records: list[dict[str, Any]] = []
+    source_issues: list[dict[str, Any]] = []
     catalog_overrides = _load_catalog_overrides(catalog_path or default_catalog_path())
     catalog_identity_ids = {
         (str(row.get("sheet") or ""), str(row.get("ric") or "")): series_id
@@ -1234,7 +1360,10 @@ def parse_nap_workbook(
                 parsed_series.extend(_parse_rdp_sheet(sheet, df, rdp_formulas[0]))
             for formula in rhistory_formulas:
                 parsed_series.extend(_parse_rhistory_formula_group(sheet, df, formula))
-            _validate_unique_ric_requests(parsed_series)
+            parsed_series, duplicate_issues = _quarantine_duplicate_ric_requests(parsed_series)
+            source_issues.extend(duplicate_issues)
+            for issue in duplicate_issues:
+                logger.warning(issue["message"])
 
             for parsed in parsed_series:
                 stable_series_id = catalog_identity_ids.get((parsed.sheet, parsed.ric))
@@ -1257,6 +1386,7 @@ def parse_nap_workbook(
     if generate_catalog_file:
         generate_catalog(out, catalog_path or default_catalog_path(), overwrite=False)
     out = _apply_catalog_overrides(out, catalog_path or default_catalog_path())
+    out.attrs["nap_source_issues"] = source_issues
     return out
 
 
